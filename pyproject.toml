@@ -1,14 +1,14 @@
 [project]
 name = "fastbotty"
 version = "0.0.1"
-description = "Multi-platform bot framework with support for Telegram, Discord, Slack, and Email"
+description = "Lightning-fast, super-simple Python bot framework for building powerful, interactive bots in under a minute using a single, clean YAML configuration file."
 authors = [
     {name = "Gemechis Chala", email = "gladsonchala@gmail.com"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["bot", "framework", "telegram", "discord", "slack", "email", "notifications", "webhook", "fastapi", "async"]
+keywords = ["bot", "framework", "yml", "fast", "telegram", "discord", "slack", "email", "notifications", "webhook", "fastapi", "async", "python-telegram-bot"]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
