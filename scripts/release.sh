@@ -145,20 +145,14 @@ main() {
         # Read first line as title, rest as notes
         RELEASE_TITLE=$(head -n 1 "$RELEASE_INPUT")
         RELEASE_NOTES=$(tail -n +2 "$RELEASE_INPUT" | sed '/^$/d')  # Skip empty lines
-    elif [[ "$RELEASE_INPUT" == *.md ]] || [[ "$RELEASE_INPUT" == *.txt ]] || [[ "$RELEASE_INPUT" == *.rst ]]; then
-        # Input ends with a file extension but file doesn't exist
+    elif [[ "$RELEASE_INPUT" == *.md ]] || [[ "$RELEASE_INPUT" == *.txt ]] || [[ "$RELEASE_INPUT" == *.rst ]] || \
+         [[ "$RELEASE_INPUT" == *"/"*.md ]] || [[ "$RELEASE_INPUT" == *"/"*.txt ]] || [[ "$RELEASE_INPUT" == *"/"*.rst ]]; then
+        # Input looks like a file path (ends with common extension or contains path + extension) but file doesn't exist
         print_error "File not found: $RELEASE_INPUT"
         echo "Please provide a valid file path or use literal text for release notes."
         echo "Examples:"
         echo "  ./release.sh 1.0.2 'Bug fixes for HTML parse mode'"
         echo "  ./release.sh 1.0.2 RELEASE_NOTES.md"
-        exit 1
-    elif [[ "$RELEASE_INPUT" == *"/"*.md ]] || [[ "$RELEASE_INPUT" == *"/"*.txt ]] || [[ "$RELEASE_INPUT" == *"/"*.rst ]]; then
-        # Input contains a path separator AND ends with file extension
-        print_error "File not found: $RELEASE_INPUT"
-        echo "Please provide a valid file path or use literal text for release notes."
-        echo "Examples:"
-        echo "  ./release.sh 1.0.2 'Bug fixes for HTML parse mode'"
         echo "  ./release.sh 1.0.2 path/to/RELEASE_NOTES.md"
         exit 1
     else
