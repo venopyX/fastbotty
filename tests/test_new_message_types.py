@@ -24,9 +24,7 @@ async def test_send_document_test_mode():
 async def test_send_document_with_reply_markup():
     """Test sending document with inline keyboard"""
     bot = TelegramBot(token="test_token", test_mode=True)
-    reply_markup = {
-        "inline_keyboard": [[{"text": "View", "url": "https://example.com"}]]
-    }
+    reply_markup = {"inline_keyboard": [[{"text": "View", "url": "https://example.com"}]]}
     result = await bot.send_document(
         chat_id="123",
         document_url="https://example.com/doc.pdf",
@@ -160,9 +158,7 @@ async def test_send_location_with_options():
 async def test_send_location_with_reply_markup():
     """Test sending location with reply markup"""
     bot = TelegramBot(token="test_token", test_mode=True)
-    reply_markup = {
-        "inline_keyboard": [[{"text": "Navigate", "url": "https://maps.google.com"}]]
-    }
+    reply_markup = {"inline_keyboard": [[{"text": "Navigate", "url": "https://maps.google.com"}]]}
     result = await bot.send_location(
         chat_id="123",
         latitude=40.7128,
