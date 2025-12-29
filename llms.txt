@@ -151,6 +151,63 @@ buttons:
       callback_game: true
 ```
 
+**Note**: Pay and callback_game buttons must be the first button in the first row. For pay buttons, `⭐️` and `XTR` are automatically replaced with ⭐.
+
+## Invoices & Payments
+
+Send payment invoices with pay button (must be first in first row):
+
+```yaml
+endpoints:
+  - path: "/payment/product"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "Pay 10 XTR"  # XTR → ⭐
+          pay: true
+    invoice:
+      title: "Premium Subscription"
+      description: "Monthly premium access"
+      payload: "premium_{{ user_id }}"
+      currency: "XTR"  # Use XTR for Telegram Stars
+      provider_token: ""  # Empty string for Telegram Stars
+      prices:
+        - label: "Subscription"
+          amount: 1000  # 10.00 in smallest units
+
+# With multiple prices and tips
+endpoints:
+  - path: "/payment/donation"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "💰 Donate ⭐️"  # ⭐️ → ⭐
+          pay: true
+    invoice:
+      title: "Support Project"
+      description: "Help us continue"
+      payload: "donation_{{ id }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"
+      prices:
+        - label: "Donation"
+          amount: 1000  # $10.00
+        - label: "Processing Fee"
+          amount: 100   # $1.00
+      max_tip_amount: 5000
+      suggested_tip_amounts: [500, 1000, 2000]
+      photo_url: "https://example.com/image.jpg"
+      need_email: true
+      need_name: true
+```
+
+**Send invoice:**
+```bash
+curl -X POST http://localhost:8000/payment/product \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "123", "order_id": "456"}'
+```
+
 ## Message Templates
 
 Define reusable Jinja2 templates for consistent messaging:

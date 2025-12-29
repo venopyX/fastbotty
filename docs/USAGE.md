@@ -464,6 +464,148 @@ callbacks:
 
 ---
 
+## Invoices & Payments
+
+Send payment invoices with the pay button. The pay button **must always be the first button in the first row** of an inline keyboard.
+
+### Important Notes
+
+- **Pay Button Position**: The pay button must be the first button in the first row
+- **Star Icon Replacement**: Substrings `⭐️` and `XTR` in the button text are automatically replaced with the Telegram Star icon (⭐)
+- **Provider Token**: Use an empty string `""` for Telegram Stars payment
+- **Currency**: Use three-letter ISO 4217 currency codes (USD, EUR, etc.)
+- **Amounts**: Specify prices in smallest currency units (cents for USD, pence for GBP, etc.)
+
+### Basic Invoice Configuration
+
+```yaml
+endpoints:
+  - path: "/payment/product"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "Pay 10 XTR"  # XTR automatically replaced with ⭐
+          pay: true
+    invoice:
+      title: "Premium Subscription"
+      description: "Monthly premium access to all features"
+      payload: "premium_monthly_{{ user_id }}"  # Bot-defined payload (supports templates)
+      currency: "XTR"  # Use XTR for Telegram Stars or USD, EUR, etc.
+      provider_token: ""  # Empty string for Telegram Stars
+      prices:
+        - label: "Subscription"
+          amount: 1000  # 10.00 in smallest units (e.g., cents)
+```
+
+### Invoice with Multiple Price Items
+
+```yaml
+endpoints:
+  - path: "/payment/order"
+    chat_id: "123456789"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    buttons:
+      - - text: "💳 Pay $25.00"
+          pay: true
+    invoice:
+      title: "Order #{{ order_id }}"
+      description: "Your order from {{ shop_name }}"
+      payload: "order_{{ order_id }}_{{ timestamp }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"  # Your payment provider token
+      prices:
+        - label: "Product"
+          amount: 2000  # $20.00
+        - label: "Shipping"
+          amount: 500   # $5.00
+        - label: "Discount"
+          amount: -200  # -$2.00 (negative for discounts)
+      photo_url: "https://example.com/product.jpg"
+      photo_width: 800
+      photo_height: 600
+```
+
+### Invoice with Tips
+
+```yaml
+endpoints:
+  - path: "/payment/donation"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "💰 Donate ⭐️"  # ⭐️ replaced with ⭐
+          pay: true
+    invoice:
+      title: "Support Our Project"
+      description: "Help us continue our work"
+      payload: "donation_{{ donation_id }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"
+      prices:
+        - label: "Donation"
+          amount: 1000  # $10.00
+      max_tip_amount: 5000  # Maximum tip: $50.00
+      suggested_tip_amounts: [500, 1000, 2000, 5000]  # Suggest: $5, $10, $20, $50
+```
+
+### Invoice with User Information Collection
+
+```yaml
+endpoints:
+  - path: "/payment/product"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "Pay 100 XTR"
+          pay: true
+    invoice:
+      title: "Physical Product"
+      description: "Requires shipping information"
+      payload: "product_{{ product_id }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"
+      prices:
+        - label: "Product"
+          amount: 5000  # $50.00
+      need_name: true             # Request user's full name
+      need_email: true            # Request user's email
+      need_phone_number: true     # Request user's phone number
+      need_shipping_address: true # Request shipping address
+      is_flexible: false          # Set true if price depends on delivery method
+```
+
+### Sending Invoice Request
+
+```bash
+curl -X POST http://localhost:8000/payment/product \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-api-key" \
+  -d '{
+    "order_id": "12345",
+    "user_id": "user_789",
+    "shop_name": "My Shop"
+  }'
+```
+
+### Using Telegram Stars
+
+For Telegram Stars payments, use an empty provider_token:
+
+```yaml
+invoice:
+  title: "Premium Feature"
+  description: "Unlock premium features"
+  payload: "stars_{{ feature_id }}"
+  currency: "XTR"  # Telegram Stars
+  provider_token: ""  # Empty for Telegram Stars
+  prices:
+    - label: "Premium Access"
+      amount: 100  # 100 Telegram Stars
+```
+
+---
+
 ## Webhooks & Commands
 
 ### Setting Up Webhooks

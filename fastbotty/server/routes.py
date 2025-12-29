@@ -118,7 +118,7 @@ def build_inline_keyboard(
     - copy_text: Copy text to clipboard (Bot API 8.0+)
     - callback_game: Game callback (first button in first row only)
     - pay: Payment button (first button in first row only)
-    
+
     Note: Pay and callback_game buttons must be the first button in the first row.
     """
     if not buttons:
@@ -135,9 +135,7 @@ def build_inline_keyboard(
             for row_idx, row in enumerate(buttons):
                 for btn_idx, btn in enumerate(row):
                     if btn.pay and (row_idx != 0 or btn_idx != 0):
-                        raise ValueError(
-                            "Pay button must be the first button in the first row"
-                        )
+                        raise ValueError("Pay button must be the first button in the first row")
                     if btn.callback_game and (row_idx != 0 or btn_idx != 0):
                         raise ValueError(
                             "Callback game button must be the first button in the first row"
@@ -149,12 +147,12 @@ def build_inline_keyboard(
         for btn in row:
             # Render button text template if payload provided
             text = _render_template(btn.text, payload)
-            
+
             # For pay buttons, replace ⭐️ and XTR with Telegram Star icon
             if btn.pay:
                 text = text.replace("⭐️", "⭐")
                 text = text.replace("XTR", "⭐")
-            
+
             button: dict[str, Any] = {"text": text}
 
             # Handle all button types (mutually exclusive)
@@ -358,7 +356,7 @@ def create_endpoint_handler(
                         endpoint_config.invoice.description, payload
                     )
                     invoice_payload = _render_template(endpoint_config.invoice.payload, payload)
-                    
+
                     # Prepare prices with template rendering
                     prices = []
                     for price in endpoint_config.invoice.prices:
@@ -369,7 +367,7 @@ def create_endpoint_handler(
                             amount_str = _render_template(str(price.amount), payload)
                             amount = int(amount_str)
                         prices.append({"label": label, "amount": amount})
-                    
+
                     # Send invoice
                     result = await bot.send_invoice(
                         chat_id=chat_id,

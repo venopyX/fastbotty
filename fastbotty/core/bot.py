@@ -368,11 +368,11 @@ class TelegramBot:
             "currency": currency,
             "prices": prices,
         }
-        
+
         # provider_token can be empty string for Telegram Stars
         if provider_token is not None:
             payload["provider_token"] = provider_token
-        
+
         if max_tip_amount is not None:
             payload["max_tip_amount"] = max_tip_amount
         if suggested_tip_amounts is not None:
