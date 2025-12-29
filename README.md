@@ -28,6 +28,7 @@ Ideal for:
 - **🖼️ Rich Media**: Single images, photo galleries (up to 10), documents, videos, audio, and voice messages.
 - **📍 Location Sharing**: Send GPS coordinates with optional live tracking.
 - **🎹 Inline Keyboards**: Interactive buttons with dynamic templates.
+- **💳 Payment Support**: Send invoices with pay buttons for Telegram Stars and other providers.
 - **⌨️ Reply Keyboards**: Custom keyboards with buttons for contacts, locations, and more.
 - **🤖 Command Handlers**: Respond to `/start`, `/help`, etc.
 - **🌐 Environment Variables**: Universal `${VAR}` support in all config fields.

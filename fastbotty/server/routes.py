@@ -116,11 +116,30 @@ def build_inline_keyboard(
     - switch_inline_query_current_chat: Insert inline query in current chat
     - switch_inline_query_chosen_chat: Choose specific chat type for inline query
     - copy_text: Copy text to clipboard (Bot API 8.0+)
-    - callback_game: Game callback (first button in row only)
-    - pay: Payment button (first button in row only)
+    - callback_game: Game callback (first button in first row only)
+    - pay: Payment button (first button in first row only)
+
+    Note: Pay and callback_game buttons must be the first button in the first row.
     """
     if not buttons:
         return None
+
+    # Validate pay and callback_game button placement
+    if buttons and buttons[0]:
+        first_button = buttons[0][0]
+        if first_button.pay or first_button.callback_game:
+            # Pay and callback_game must be first button in first row
+            pass
+        else:
+            # Check if pay or callback_game appears elsewhere (not allowed)
+            for row_idx, row in enumerate(buttons):
+                for btn_idx, btn in enumerate(row):
+                    if btn.pay and (row_idx != 0 or btn_idx != 0):
+                        raise ValueError("Pay button must be the first button in the first row")
+                    if btn.callback_game and (row_idx != 0 or btn_idx != 0):
+                        raise ValueError(
+                            "Callback game button must be the first button in the first row"
+                        )
 
     keyboard = []
     for row in buttons:
@@ -128,6 +147,12 @@ def build_inline_keyboard(
         for btn in row:
             # Render button text template if payload provided
             text = _render_template(btn.text, payload)
+
+            # For pay buttons, replace ⭐️ and XTR with Telegram Star icon
+            if btn.pay:
+                text = text.replace("⭐️", "⭐")
+                text = text.replace("XTR", "⭐")
+
             button: dict[str, Any] = {"text": text}
 
             # Handle all button types (mutually exclusive)
@@ -323,7 +348,59 @@ def create_endpoint_handler(
             results = []
             for chat_id in target_chat_ids:
                 # Determine message type and send accordingly
-                if location:
+                # Check for invoice (if pay button is used)
+                if endpoint_config.invoice:
+                    # Render invoice fields with Jinja2 templates
+                    invoice_title = _render_template(endpoint_config.invoice.title, payload)
+                    invoice_description = _render_template(
+                        endpoint_config.invoice.description, payload
+                    )
+                    invoice_payload = _render_template(endpoint_config.invoice.payload, payload)
+
+                    # Prepare prices with template rendering
+                    prices = []
+                    for price in endpoint_config.invoice.prices:
+                        label = _render_template(price.label, payload)
+                        # Amount can be a template too
+                        amount = price.amount
+                        if isinstance(price.amount, str):
+                            amount_str = _render_template(str(price.amount), payload)
+                            amount = int(amount_str)
+                        prices.append({"label": label, "amount": amount})
+
+                    # Send invoice
+                    result = await bot.send_invoice(
+                        chat_id=chat_id,
+                        title=invoice_title,
+                        description=invoice_description,
+                        payload_str=invoice_payload,
+                        currency=endpoint_config.invoice.currency,
+                        prices=prices,
+                        provider_token=endpoint_config.invoice.provider_token or "",
+                        max_tip_amount=endpoint_config.invoice.max_tip_amount,
+                        suggested_tip_amounts=endpoint_config.invoice.suggested_tip_amounts,
+                        start_parameter=endpoint_config.invoice.start_parameter,
+                        provider_data=endpoint_config.invoice.provider_data,
+                        photo_url=(
+                            _render_template(endpoint_config.invoice.photo_url, payload)
+                            if endpoint_config.invoice.photo_url
+                            else None
+                        ),
+                        photo_size=endpoint_config.invoice.photo_size,
+                        photo_width=endpoint_config.invoice.photo_width,
+                        photo_height=endpoint_config.invoice.photo_height,
+                        need_name=endpoint_config.invoice.need_name,
+                        need_phone_number=endpoint_config.invoice.need_phone_number,
+                        need_email=endpoint_config.invoice.need_email,
+                        need_shipping_address=endpoint_config.invoice.need_shipping_address,
+                        send_phone_number_to_provider=(
+                            endpoint_config.invoice.send_phone_number_to_provider
+                        ),
+                        send_email_to_provider=endpoint_config.invoice.send_email_to_provider,
+                        is_flexible=endpoint_config.invoice.is_flexible,
+                        reply_markup=reply_markup,
+                    )
+                elif location:
                     # Send location
                     lat = location.get("latitude")
                     lon = location.get("longitude")

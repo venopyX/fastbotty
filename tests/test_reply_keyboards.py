@@ -1,6 +1,5 @@
 """Tests for reply keyboard markup functionality"""
 
-
 from fastbotty.core.config import (
     ForceReply,
     KeyboardButton,
