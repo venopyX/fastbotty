@@ -7,7 +7,15 @@ import aiohttp
 from fastapi import FastAPI, Header, HTTPException, Request
 from jinja2 import Template
 
-from fastbotty.core.config import AppConfig, ButtonConfig, EndpointConfig
+from fastbotty.core.config import (
+    AppConfig,
+    ButtonConfig,
+    EndpointConfig,
+    ForceReply,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+)
 from fastbotty.core.interfaces import IPlugin
 
 logger = logging.getLogger(__name__)
@@ -16,6 +24,82 @@ logger = logging.getLogger(__name__)
 def _render_template(value: str, payload: dict[str, Any] | None) -> str:
     """Render Jinja2 template if payload is provided"""
     return Template(value).render(**payload) if payload else value
+
+
+def build_reply_keyboard_markup(
+    reply_keyboard: ReplyKeyboardMarkup, payload: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Build reply keyboard markup from config with template support.
+
+    Returns a reply keyboard that replaces the user's keyboard with custom buttons.
+    Supports text buttons and special request buttons (contact, location, poll, web_app).
+    """
+    keyboard = []
+    for row in reply_keyboard.keyboard:
+        keyboard_row = []
+        for btn in row:
+            if isinstance(btn, str):
+                # Simple text button
+                keyboard_row.append({"text": _render_template(btn, payload)})
+            elif isinstance(btn, KeyboardButton):
+                # KeyboardButton with optional special requests
+                button: dict[str, Any] = {"text": _render_template(btn.text, payload)}
+                if btn.request_contact is not None:
+                    button["request_contact"] = btn.request_contact
+                if btn.request_location is not None:
+                    button["request_location"] = btn.request_location
+                if btn.request_poll is not None:
+                    button["request_poll"] = btn.request_poll
+                if btn.web_app is not None:
+                    button["web_app"] = {"url": _render_template(btn.web_app.url, payload)}
+                keyboard_row.append(button)
+        keyboard.append(keyboard_row)
+
+    markup: dict[str, Any] = {"keyboard": keyboard}
+    if reply_keyboard.is_persistent is not None:
+        markup["is_persistent"] = reply_keyboard.is_persistent
+    if reply_keyboard.resize_keyboard is not None:
+        markup["resize_keyboard"] = reply_keyboard.resize_keyboard
+    if reply_keyboard.one_time_keyboard is not None:
+        markup["one_time_keyboard"] = reply_keyboard.one_time_keyboard
+    if reply_keyboard.input_field_placeholder is not None:
+        markup["input_field_placeholder"] = _render_template(
+            reply_keyboard.input_field_placeholder, payload
+        )
+    if reply_keyboard.selective is not None:
+        markup["selective"] = reply_keyboard.selective
+
+    return markup
+
+
+def build_reply_keyboard_remove(
+    reply_keyboard_remove: ReplyKeyboardRemove,
+) -> dict[str, Any]:
+    """Build reply keyboard remove markup from config.
+
+    Returns a markup that removes the reply keyboard.
+    """
+    markup: dict[str, Any] = {"remove_keyboard": reply_keyboard_remove.remove_keyboard}
+    if reply_keyboard_remove.selective is not None:
+        markup["selective"] = reply_keyboard_remove.selective
+    return markup
+
+
+def build_force_reply(
+    force_reply: ForceReply, payload: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Build force reply markup from config with template support.
+
+    Returns a markup that forces the user to reply to the message.
+    """
+    markup: dict[str, Any] = {"force_reply": force_reply.force_reply}
+    if force_reply.input_field_placeholder is not None:
+        markup["input_field_placeholder"] = _render_template(
+            force_reply.input_field_placeholder, payload
+        )
+    if force_reply.selective is not None:
+        markup["selective"] = force_reply.selective
+    return markup
 
 
 def build_inline_keyboard(
@@ -217,13 +301,98 @@ def create_endpoint_handler(
             image_url = get_field(payload, "image_url")
             image_urls = get_field(payload, "image_urls", [])
 
-            # Build inline keyboard if buttons configured
-            reply_markup = build_inline_keyboard(endpoint_config.buttons, payload)
+            # Get media fields from payload
+            document_url = get_field(payload, "document_url")
+            video_url = get_field(payload, "video_url")
+            audio_url = get_field(payload, "audio_url")
+            voice_url = get_field(payload, "voice_url")
+            location = get_field(payload, "location")
+
+            # Build reply markup - prioritize inline keyboard, then reply keyboard types
+            reply_markup = None
+            if endpoint_config.buttons:
+                reply_markup = build_inline_keyboard(endpoint_config.buttons, payload)
+            elif endpoint_config.reply_keyboard:
+                reply_markup = build_reply_keyboard_markup(endpoint_config.reply_keyboard, payload)
+            elif endpoint_config.reply_keyboard_remove:
+                reply_markup = build_reply_keyboard_remove(endpoint_config.reply_keyboard_remove)
+            elif endpoint_config.force_reply:
+                reply_markup = build_force_reply(endpoint_config.force_reply, payload)
 
             # Send to all target chats
             results = []
             for chat_id in target_chat_ids:
-                if image_urls:
+                # Determine message type and send accordingly
+                if location:
+                    # Send location
+                    lat = location.get("latitude")
+                    lon = location.get("longitude")
+                    if lat is None or lon is None:
+                        raise HTTPException(
+                            status_code=400,
+                            detail={
+                                "error": "invalid_location",
+                                "message": "Location must have latitude and longitude",
+                            },
+                        )
+                    result = await bot.send_location(
+                        chat_id=chat_id,
+                        latitude=lat,
+                        longitude=lon,
+                        horizontal_accuracy=location.get("horizontal_accuracy"),
+                        live_period=location.get("live_period"),
+                        heading=location.get("heading"),
+                        proximity_alert_radius=location.get("proximity_alert_radius"),
+                        reply_markup=reply_markup,
+                    )
+                elif document_url:
+                    # Send document
+                    result = await bot.send_document(
+                        chat_id=chat_id,
+                        document_url=document_url,
+                        caption=formatted_message,
+                        parse_mode=parse_mode,
+                        filename=get_field(payload, "filename"),
+                        reply_markup=reply_markup,
+                    )
+                elif video_url:
+                    # Send video
+                    result = await bot.send_video(
+                        chat_id=chat_id,
+                        video_url=video_url,
+                        caption=formatted_message,
+                        parse_mode=parse_mode,
+                        thumbnail_url=get_field(payload, "thumbnail_url"),
+                        width=get_field(payload, "width"),
+                        height=get_field(payload, "height"),
+                        duration=get_field(payload, "duration"),
+                        supports_streaming=get_field(payload, "supports_streaming"),
+                        reply_markup=reply_markup,
+                    )
+                elif audio_url:
+                    # Send audio
+                    result = await bot.send_audio(
+                        chat_id=chat_id,
+                        audio_url=audio_url,
+                        caption=formatted_message,
+                        parse_mode=parse_mode,
+                        duration=get_field(payload, "duration"),
+                        performer=get_field(payload, "performer"),
+                        title=get_field(payload, "title"),
+                        thumbnail_url=get_field(payload, "thumbnail_url"),
+                        reply_markup=reply_markup,
+                    )
+                elif voice_url:
+                    # Send voice message
+                    result = await bot.send_voice(
+                        chat_id=chat_id,
+                        voice_url=voice_url,
+                        caption=formatted_message,
+                        parse_mode=parse_mode,
+                        duration=get_field(payload, "duration"),
+                        reply_markup=reply_markup,
+                    )
+                elif image_urls:
                     result = await bot.send_media_group(
                         chat_id=chat_id,
                         photo_urls=image_urls,
