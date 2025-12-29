@@ -29,7 +29,7 @@ def create_app(config_path: str = "config.yaml") -> FastAPI:
     app = FastAPI(
         title="FastBotty",
         description="Multi-platform bot framework",
-        version="0.0.1",
+        version="0.0.2",
     )
 
     # Add CORS middleware

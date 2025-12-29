@@ -9,7 +9,7 @@ import yaml
 
 
 @click.group()
-@click.version_option(version="0.0.1")
+@click.version_option(version="0.0.2")
 def cli() -> None:
     """FastBotty - Multi-platform Bot Framework"""
     pass
