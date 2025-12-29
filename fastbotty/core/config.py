@@ -86,6 +86,61 @@ class CopyTextButton(BaseModel):
     text: str = Field(..., description="Text to copy to clipboard")
 
 
+class KeyboardButton(BaseModel, EnvVarMixin):
+    """Configuration for reply keyboard button"""
+
+    text: str = Field(..., description="Button text")
+    request_contact: bool | None = Field(default=None, description="Request user's phone number")
+    request_location: bool | None = Field(default=None, description="Request user's location")
+    request_poll: dict[str, Any] | None = Field(
+        default=None, description="Request user to create a poll"
+    )
+    web_app: WebAppInfo | None = Field(
+        default=None, description="Web App to launch when button is pressed"
+    )
+
+
+class ReplyKeyboardMarkup(BaseModel, EnvVarMixin):
+    """Reply keyboard markup configuration"""
+
+    keyboard: list[list[str] | list[KeyboardButton]] = Field(
+        ...,
+        description="Array of button rows, each containing button text or KeyboardButton objects",
+    )
+    is_persistent: bool | None = Field(
+        default=None, description="Requests clients to always show the keyboard"
+    )
+    resize_keyboard: bool | None = Field(
+        default=None, description="Requests clients to resize the keyboard vertically"
+    )
+    one_time_keyboard: bool | None = Field(
+        default=None, description="Requests clients to hide keyboard after use"
+    )
+    input_field_placeholder: str | None = Field(
+        default=None, description="Placeholder shown in the input field"
+    )
+    selective: bool | None = Field(default=None, description="Show keyboard to specific users only")
+
+
+class ReplyKeyboardRemove(BaseModel, EnvVarMixin):
+    """Remove reply keyboard markup"""
+
+    remove_keyboard: bool = Field(default=True, description="Remove the keyboard")
+    selective: bool | None = Field(
+        default=None, description="Remove keyboard for specific users only"
+    )
+
+
+class ForceReply(BaseModel, EnvVarMixin):
+    """Force reply markup configuration"""
+
+    force_reply: bool = Field(default=True, description="Force user to reply")
+    input_field_placeholder: str | None = Field(
+        default=None, description="Placeholder shown in the input field"
+    )
+    selective: bool | None = Field(default=None, description="Force reply for specific users only")
+
+
 class ButtonConfig(BaseModel, EnvVarMixin):
     """Configuration for inline keyboard button.
 
@@ -142,6 +197,13 @@ class EndpointConfig(BaseModel, EnvVarMixin):
     buttons: list[list[ButtonConfig]] = Field(
         default_factory=list, description="Inline keyboard buttons (rows)"
     )
+    reply_keyboard: ReplyKeyboardMarkup | None = Field(
+        default=None, description="Reply keyboard markup"
+    )
+    reply_keyboard_remove: ReplyKeyboardRemove | None = Field(
+        default=None, description="Remove reply keyboard"
+    )
+    force_reply: ForceReply | None = Field(default=None, description="Force reply from user")
 
     @field_validator("path")
     @classmethod

@@ -159,3 +159,171 @@ class TelegramBot:
             payload["text"] = text
         payload["show_alert"] = show_alert
         return await self._send_with_retry("answerCallbackQuery", payload, 1)
+
+    async def send_document(
+        self,
+        chat_id: str,
+        document_url: str,
+        caption: str | None = None,
+        parse_mode: str | None = None,
+        filename: str | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        max_retries: int = 3,
+    ) -> dict[str, Any]:
+        """Send document to Telegram"""
+        if self.test_mode:
+            logger.info(f"TEST MODE - Would send document to {chat_id}: {document_url}")
+            return {"ok": True, "result": {"message_id": 0}}
+
+        payload: dict[str, Any] = {"chat_id": chat_id, "document": document_url}
+        if caption:
+            escaped_caption = sanitize_text(caption, parse_mode)
+            payload["caption"] = escaped_caption
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        if filename:
+            payload["filename"] = filename
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+
+        return await self._send_with_retry("sendDocument", payload, max_retries)
+
+    async def send_video(
+        self,
+        chat_id: str,
+        video_url: str,
+        caption: str | None = None,
+        parse_mode: str | None = None,
+        thumbnail_url: str | None = None,
+        width: int | None = None,
+        height: int | None = None,
+        duration: int | None = None,
+        supports_streaming: bool | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        max_retries: int = 3,
+    ) -> dict[str, Any]:
+        """Send video to Telegram"""
+        if self.test_mode:
+            logger.info(f"TEST MODE - Would send video to {chat_id}: {video_url}")
+            return {"ok": True, "result": {"message_id": 0}}
+
+        payload: dict[str, Any] = {"chat_id": chat_id, "video": video_url}
+        if caption:
+            escaped_caption = sanitize_text(caption, parse_mode)
+            payload["caption"] = escaped_caption
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        if thumbnail_url:
+            payload["thumbnail"] = thumbnail_url
+        if width is not None:
+            payload["width"] = width
+        if height is not None:
+            payload["height"] = height
+        if duration is not None:
+            payload["duration"] = duration
+        if supports_streaming is not None:
+            payload["supports_streaming"] = supports_streaming
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+
+        return await self._send_with_retry("sendVideo", payload, max_retries)
+
+    async def send_audio(
+        self,
+        chat_id: str,
+        audio_url: str,
+        caption: str | None = None,
+        parse_mode: str | None = None,
+        duration: int | None = None,
+        performer: str | None = None,
+        title: str | None = None,
+        thumbnail_url: str | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        max_retries: int = 3,
+    ) -> dict[str, Any]:
+        """Send audio to Telegram"""
+        if self.test_mode:
+            logger.info(f"TEST MODE - Would send audio to {chat_id}: {audio_url}")
+            return {"ok": True, "result": {"message_id": 0}}
+
+        payload: dict[str, Any] = {"chat_id": chat_id, "audio": audio_url}
+        if caption:
+            escaped_caption = sanitize_text(caption, parse_mode)
+            payload["caption"] = escaped_caption
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        if duration is not None:
+            payload["duration"] = duration
+        if performer:
+            payload["performer"] = performer
+        if title:
+            payload["title"] = title
+        if thumbnail_url:
+            payload["thumbnail"] = thumbnail_url
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+
+        return await self._send_with_retry("sendAudio", payload, max_retries)
+
+    async def send_voice(
+        self,
+        chat_id: str,
+        voice_url: str,
+        caption: str | None = None,
+        parse_mode: str | None = None,
+        duration: int | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        max_retries: int = 3,
+    ) -> dict[str, Any]:
+        """Send voice message to Telegram"""
+        if self.test_mode:
+            logger.info(f"TEST MODE - Would send voice message to {chat_id}: {voice_url}")
+            return {"ok": True, "result": {"message_id": 0}}
+
+        payload: dict[str, Any] = {"chat_id": chat_id, "voice": voice_url}
+        if caption:
+            escaped_caption = sanitize_text(caption, parse_mode)
+            payload["caption"] = escaped_caption
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+        if duration is not None:
+            payload["duration"] = duration
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+
+        return await self._send_with_retry("sendVoice", payload, max_retries)
+
+    async def send_location(
+        self,
+        chat_id: str,
+        latitude: float,
+        longitude: float,
+        horizontal_accuracy: float | None = None,
+        live_period: int | None = None,
+        heading: int | None = None,
+        proximity_alert_radius: int | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        max_retries: int = 3,
+    ) -> dict[str, Any]:
+        """Send location to Telegram"""
+        if self.test_mode:
+            logger.info(f"TEST MODE - Would send location to {chat_id}: ({latitude}, {longitude})")
+            return {"ok": True, "result": {"message_id": 0}}
+
+        payload: dict[str, Any] = {
+            "chat_id": chat_id,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
+        if horizontal_accuracy is not None:
+            payload["horizontal_accuracy"] = horizontal_accuracy
+        if live_period is not None:
+            payload["live_period"] = live_period
+        if heading is not None:
+            payload["heading"] = heading
+        if proximity_alert_radius is not None:
+            payload["proximity_alert_radius"] = proximity_alert_radius
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+
+        return await self._send_with_retry("sendLocation", payload, max_retries)
