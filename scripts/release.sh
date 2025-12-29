@@ -145,6 +145,14 @@ main() {
         # Read first line as title, rest as notes
         RELEASE_TITLE=$(head -n 1 "$RELEASE_INPUT")
         RELEASE_NOTES=$(tail -n +2 "$RELEASE_INPUT" | sed '/^$/d')  # Skip empty lines
+    elif [[ "$RELEASE_INPUT" == *"/"* ]] || [[ "$RELEASE_INPUT" == *".md"* ]] || [[ "$RELEASE_INPUT" == *".txt"* ]]; then
+        # Input looks like a file path but file doesn't exist
+        print_error "File not found: $RELEASE_INPUT"
+        echo "Please provide a valid file path or use literal text for release notes."
+        echo "Examples:"
+        echo "  ./release.sh 1.0.2 'Bug fixes for HTML parse mode'"
+        echo "  ./release.sh 1.0.2 RELEASE_NOTES.md"
+        exit 1
     else
         RELEASE_TITLE="Release $NEW_VERSION"
         RELEASE_NOTES="$RELEASE_INPUT"
