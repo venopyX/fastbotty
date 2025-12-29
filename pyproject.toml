@@ -5,17 +5,32 @@ description = "Lightning-fast, super-simple Python bot framework for building po
 authors = [
     {name = "Gemechis Chala", email = "gladsonchala@gmail.com"}
 ]
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["bot", "framework", "yml", "fast", "telegram", "discord", "slack", "email", "notifications", "webhook", "fastapi", "async", "python-telegram-bot"]
+keywords = [
+    "bot",
+    "framework",
+    "yml",
+    "fast",
+    "telegram",
+    "discord",
+    "slack",
+    "email",
+    "notifications",
+    "webhook",
+    "fastapi",
+    "async",
+    "python-telegram-bot"
+]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Framework :: FastAPI",
     "Topic :: Communications :: Chat",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -63,7 +78,7 @@ exclude = ["tests*", "test_env*", "templates*"]
 
 [tool.black]
 line-length = 100
-target-version = ['py310']
+target-version = ["py310"]
 
 [tool.ruff]
 line-length = 100
