@@ -254,6 +254,60 @@ class TestBuildInlineKeyboard:
 
         assert result == {"inline_keyboard": [[{"text": "Pay $10", "pay": True}]]}
 
+    def test_pay_button_text_replacement(self):
+        """Test pay button text with star icon replacement"""
+        buttons = [[ButtonConfig(text="Pay 10 ⭐️", pay=True)]]
+        result = build_inline_keyboard(buttons)
+
+        assert result == {"inline_keyboard": [[{"text": "Pay 10 ⭐", "pay": True}]]}
+
+    def test_pay_button_xtr_replacement(self):
+        """Test pay button text with XTR replacement"""
+        buttons = [[ButtonConfig(text="Pay 10 XTR", pay=True)]]
+        result = build_inline_keyboard(buttons)
+
+        assert result == {"inline_keyboard": [[{"text": "Pay 10 ⭐", "pay": True}]]}
+
+    def test_pay_button_must_be_first(self):
+        """Test that pay button must be first in first row"""
+        import pytest
+
+        # Pay button not in first position
+        buttons = [
+            [
+                ButtonConfig(text="Other", callback_data="other"),
+                ButtonConfig(text="Pay", pay=True),
+            ]
+        ]
+        with pytest.raises(ValueError, match="Pay button must be the first button"):
+            build_inline_keyboard(buttons)
+
+    def test_pay_button_must_be_in_first_row(self):
+        """Test that pay button must be in first row"""
+        import pytest
+
+        # Pay button in second row
+        buttons = [
+            [ButtonConfig(text="Other", callback_data="other")],
+            [ButtonConfig(text="Pay", pay=True)],
+        ]
+        with pytest.raises(ValueError, match="Pay button must be the first button"):
+            build_inline_keyboard(buttons)
+
+    def test_callback_game_button_must_be_first(self):
+        """Test that callback game button must be first in first row"""
+        import pytest
+
+        # Callback game button not in first position
+        buttons = [
+            [
+                ButtonConfig(text="Other", callback_data="other"),
+                ButtonConfig(text="Play", callback_game=True),
+            ]
+        ]
+        with pytest.raises(ValueError, match="Callback game button must be the first button"):
+            build_inline_keyboard(buttons)
+
     def test_multiple_rows_keyboard(self):
         """Test building keyboard with multiple rows"""
         buttons = [

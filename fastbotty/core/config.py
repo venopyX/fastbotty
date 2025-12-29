@@ -141,6 +141,54 @@ class ForceReply(BaseModel, EnvVarMixin):
     selective: bool | None = Field(default=None, description="Force reply for specific users only")
 
 
+class LabeledPrice(BaseModel, EnvVarMixin):
+    """Price portion of the product"""
+
+    label: str = Field(..., description="Portion label")
+    amount: int = Field(..., description="Price in smallest currency units (e.g., cents)")
+
+
+class InvoiceConfig(BaseModel, EnvVarMixin):
+    """Configuration for Telegram invoice (required for pay button)"""
+
+    title: str = Field(..., description="Product name, 1-32 characters")
+    description: str = Field(..., description="Product description, 1-255 characters")
+    payload: str = Field(..., description="Bot-defined invoice payload, 1-128 bytes")
+    provider_token: str | None = Field(
+        default=None,
+        description="Payment provider token (use empty string for Telegram Stars)",
+    )
+    currency: str = Field(..., description="Three-letter ISO 4217 currency code (e.g., USD, EUR)")
+    prices: list[LabeledPrice] = Field(..., description="Price breakdown (at least one)")
+    max_tip_amount: int | None = Field(default=None, description="Maximum tip in smallest units")
+    suggested_tip_amounts: list[int] | None = Field(
+        default=None, description="Suggested tip amounts in smallest units"
+    )
+    start_parameter: str | None = Field(
+        default=None, description="Unique deep-linking parameter for /start"
+    )
+    provider_data: str | None = Field(
+        default=None, description="JSON-serialized data for payment provider"
+    )
+    photo_url: str | None = Field(default=None, description="Product photo URL")
+    photo_size: int | None = Field(default=None, description="Photo size in bytes")
+    photo_width: int | None = Field(default=None, description="Photo width")
+    photo_height: int | None = Field(default=None, description="Photo height")
+    need_name: bool | None = Field(default=None, description="Request user's full name")
+    need_phone_number: bool | None = Field(default=None, description="Request user's phone number")
+    need_email: bool | None = Field(default=None, description="Request user's email")
+    need_shipping_address: bool | None = Field(
+        default=None, description="Request user's shipping address"
+    )
+    send_phone_number_to_provider: bool | None = Field(
+        default=None, description="Send phone number to provider"
+    )
+    send_email_to_provider: bool | None = Field(default=None, description="Send email to provider")
+    is_flexible: bool | None = Field(
+        default=None, description="Price depends on delivery method (requires shipping address)"
+    )
+
+
 class ButtonConfig(BaseModel, EnvVarMixin):
     """Configuration for inline keyboard button.
 
@@ -204,6 +252,9 @@ class EndpointConfig(BaseModel, EnvVarMixin):
         default=None, description="Remove reply keyboard"
     )
     force_reply: ForceReply | None = Field(default=None, description="Force reply from user")
+    invoice: InvoiceConfig | None = Field(
+        default=None, description="Invoice configuration (required for pay button)"
+    )
 
     @field_validator("path")
     @classmethod

@@ -327,3 +327,83 @@ class TelegramBot:
             payload["reply_markup"] = reply_markup
 
         return await self._send_with_retry("sendLocation", payload, max_retries)
+
+    async def send_invoice(
+        self,
+        chat_id: str,
+        title: str,
+        description: str,
+        payload_str: str,
+        currency: str,
+        prices: list[dict[str, Any]],
+        provider_token: str | None = None,
+        max_tip_amount: int | None = None,
+        suggested_tip_amounts: list[int] | None = None,
+        start_parameter: str | None = None,
+        provider_data: str | None = None,
+        photo_url: str | None = None,
+        photo_size: int | None = None,
+        photo_width: int | None = None,
+        photo_height: int | None = None,
+        need_name: bool | None = None,
+        need_phone_number: bool | None = None,
+        need_email: bool | None = None,
+        need_shipping_address: bool | None = None,
+        send_phone_number_to_provider: bool | None = None,
+        send_email_to_provider: bool | None = None,
+        is_flexible: bool | None = None,
+        reply_markup: dict[str, Any] | None = None,
+        max_retries: int = 3,
+    ) -> dict[str, Any]:
+        """Send invoice to Telegram (required for pay button)"""
+        if self.test_mode:
+            logger.info(f"TEST MODE - Would send invoice to {chat_id}: {title}")
+            return {"ok": True, "result": {"message_id": 0}}
+
+        payload: dict[str, Any] = {
+            "chat_id": chat_id,
+            "title": title,
+            "description": description,
+            "payload": payload_str,
+            "currency": currency,
+            "prices": prices,
+        }
+        
+        # provider_token can be empty string for Telegram Stars
+        if provider_token is not None:
+            payload["provider_token"] = provider_token
+        
+        if max_tip_amount is not None:
+            payload["max_tip_amount"] = max_tip_amount
+        if suggested_tip_amounts is not None:
+            payload["suggested_tip_amounts"] = suggested_tip_amounts
+        if start_parameter:
+            payload["start_parameter"] = start_parameter
+        if provider_data:
+            payload["provider_data"] = provider_data
+        if photo_url:
+            payload["photo_url"] = photo_url
+        if photo_size is not None:
+            payload["photo_size"] = photo_size
+        if photo_width is not None:
+            payload["photo_width"] = photo_width
+        if photo_height is not None:
+            payload["photo_height"] = photo_height
+        if need_name is not None:
+            payload["need_name"] = need_name
+        if need_phone_number is not None:
+            payload["need_phone_number"] = need_phone_number
+        if need_email is not None:
+            payload["need_email"] = need_email
+        if need_shipping_address is not None:
+            payload["need_shipping_address"] = need_shipping_address
+        if send_phone_number_to_provider is not None:
+            payload["send_phone_number_to_provider"] = send_phone_number_to_provider
+        if send_email_to_provider is not None:
+            payload["send_email_to_provider"] = send_email_to_provider
+        if is_flexible is not None:
+            payload["is_flexible"] = is_flexible
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+
+        return await self._send_with_retry("sendInvoice", payload, max_retries)
