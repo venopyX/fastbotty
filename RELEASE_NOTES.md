@@ -1,13 +1,26 @@
-v0.0.2 - Enhanced Media and Interaction Support
+v1.0.4 – Payment & Invoice Support
 
-### Added
-- Support for reply keyboard markup, including text buttons, special request buttons (contact, location, poll, web_app), customization options (resize, one_time, persistent), input field placeholder, and keyboard removal
-- Force reply functionality via reply markup
-- Document sending with caption, custom filename, parse mode, and reply markup support
-- Video sending with caption, thumbnail, metadata (width, height, duration), and streaming support flag
-- Audio sending with metadata (title, performer, duration), thumbnail, and caption support
-- Voice message sending with duration and caption support
-- Location sharing, including static GPS coordinates, live location tracking with duration, horizontal accuracy, heading, and proximity alert radius
+**Added**
 
-### Changed
-- Extended reply markup support across document, video, audio, voice, and location messages
+* Complete invoice and payment support compliant with Telegram Bot API.
+* InvoiceConfig and LabeledPrice models with full template support.
+* send_invoice integration for Telegram Stars and traditional currencies.
+* Automatic pay button text replacement for ⭐️ and XTR.
+* Comprehensive invoice examples and documentation.
+
+**Fixed**
+
+* Enforced pay and callback_game buttons to be first in the first row.
+* Clear validation errors for invalid button placement.
+* Correct handling of provider tokens for Telegram Stars.
+
+**Changed**
+
+* Extended EndpointConfig to support invoices.
+* Updated routing to handle invoice sending and validation.
+* Expanded test coverage for payments, validation, and text replacement.
+
+**Security**
+
+* Provider tokens restricted to environment variables.
+* Strict validation to prevent non-compliant payment configurations.
