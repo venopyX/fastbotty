@@ -1,0 +1,23 @@
+# FastBotty Configuration
+
+bot:
+  token: "${TELEGRAM_BOT_TOKEN}"
+  test_mode: false
+
+endpoints:
+  - path: "/notify/orders"
+    chat_id: "-1001234567890"
+    formatter: "plain"
+
+  - path: "/notify/alerts"
+    chat_id: "123456789"
+    formatter: "markdown"
+    parse_mode: "Markdown"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  api_key: "${API_KEY}"
+
+logging:
+  level: "INFO"

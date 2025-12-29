@@ -1,0 +1,28 @@
+"""Example custom formatter plugin"""
+
+from typing import Any
+from fastbotty import IPlugin
+
+
+class OrderFormatter(IPlugin):
+    """Custom formatter for order notifications"""
+
+    @property
+    def name(self) -> str:
+        return "order_formatter"
+
+    def format(self, payload: dict[str, Any], config: dict[str, Any]) -> str:
+        prefix = config.get("prefix", "🛒 New Order")
+        lines = [prefix, ""]
+
+        if "order_id" in payload:
+            lines.append(f"Order ID: #{payload['order_id']}")
+        if "user" in payload:
+            lines.append(f"Customer: {payload['user']}")
+        if "total" in payload:
+            lines.append(f"Total: ${payload['total']}")
+        if "message" in payload:
+            lines.append("")
+            lines.append(payload["message"])
+
+        return "\n".join(lines)

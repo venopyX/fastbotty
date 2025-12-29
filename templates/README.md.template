@@ -1,0 +1,25 @@
+# {{project_name}}
+
+FastBotty notification service
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Set environment variables:
+   ```bash
+   export TELEGRAM_BOT_TOKEN="your-bot-token"
+   export API_KEY="your-secret-key"
+   ```
+
+3. Edit `config.yaml` with your bot settings
+
+4. Run the server:
+   ```bash
+   python main.py
+   # or
+   fastbotty run
+   ```

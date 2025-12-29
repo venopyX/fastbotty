@@ -1,0 +1,490 @@
+# FastBotty - User Guide for Configuration & Deployment
+
+> Simple, Powerful, Fast notification framework for Python. Receives HTTP webhooks and forwards them as formatted messages(currently supports only Telegram). Built on FastAPI, python-telegram-bot and aiohttp with plugin support, Jinja2 templates, and comprehensive inline keyboard support.
+
+## Quick Start
+
+```bash
+# Install FastBotty
+pip install fastbotty
+
+# Create new project
+fastbotty init my_notifier
+cd my_notifier
+
+# Edit config.yaml with your settings
+# Start the server
+fastbotty run
+```
+
+## Configuration Guide
+
+### Basic Configuration Structure
+
+```yaml
+bot:
+  token: "${TELEGRAM_BOT_TOKEN}"  # Required: Bot token from @BotFather
+  test_mode: false                # Optional: Enable for testing
+  webhook_url: "https://your-app.onrender.com"  # Required for webhooks
+  webhook_path: "/bot/webhook"   # Default webhook path
+
+endpoints:
+  - path: "/notify"              # HTTP POST endpoint path
+    chat_id: "123456789"          # Single chat ID
+    chat_ids: ["123", "456"]     # Or multiple chat IDs
+    formatter: "plain"            # plain, markdown, or custom plugin
+    template: "template_name"     # Optional: Use named template
+    parse_mode: "MarkdownV2"      # Optional: Telegram parse mode
+    labels:                       # Optional: Custom field labels
+      field_name: "🏷️ Display Name"
+    field_map:                    # Optional: Map nested JSON fields
+      image_url: "data.photo.url"
+    buttons:                      # Optional: Inline keyboard
+      - - text: "View Details"
+          url: "https://example.com/{{ id }}"
+
+server:
+  host: "0.0.0.0"               # Listen on all interfaces
+  port: 8000                     # Default port
+  api_key: "${API_KEY}"          # Optional: API authentication
+  cors_origins: ["*"]           # Optional: CORS settings
+
+logging:
+  level: "INFO"                 # Optional: Logging level
+```
+
+## Environment Variables
+
+FastBotty supports environment variable substitution with `${VAR_NAME}` syntax:
+
+```bash
+# Set required variables
+export TELEGRAM_BOT_TOKEN="your-bot-token-from-botfather"
+export API_KEY="your-secret-api-key"
+export WEBHOOK_URL="https://your-app.onrender.com"
+export CHAT_ID="123456789"
+
+# Optional: Set port
+export PORT=8000
+```
+
+In config.yaml, use variables like:
+```yaml
+bot:
+  token: "${TELEGRAM_BOT_TOKEN}"
+server:
+  api_key: "${API_KEY}"
+  port: "${PORT:-8000}"  # Use PORT env var or default to 8000
+```
+
+## Inline Keyboard Buttons
+
+FastBotty supports ALL Telegram inline keyboard button types with Jinja2 template rendering:
+
+### Basic Buttons
+
+#### URL Button
+```yaml
+buttons:
+  - - text: "🔗 Visit Website"
+      url: "https://example.com/{{ id }}"
+```
+
+#### Callback Data Button
+```yaml
+buttons:
+  - - text: "✅ Approve"
+      callback_data: "approve_{{ order_id }}"
+```
+
+### Advanced Button Types
+
+#### Web App Button
+```yaml
+buttons:
+  - - text: "🚀 Open Dashboard"
+      web_app:
+        url: "https://app.example.com/{{ user_id }}"
+```
+
+#### Login URL Button
+```yaml
+buttons:
+  - - text: "🔐 Login"
+      login_url:
+        url: "https://example.com/login"
+        forward_text: "Welcome {{ username }}"
+        bot_username: "my_bot"
+        request_write_access: true
+```
+
+#### Switch Inline Query Buttons
+```yaml
+buttons:
+  - - text: "🔍 Search Everywhere"
+      switch_inline_query: "{{ search_term }}"
+  - - text: "🔍 Search Here"
+      switch_inline_query_current_chat: "{{ query }}"
+  - - text: "📤 Share"
+      switch_inline_query_chosen_chat:
+        query: "Check out {{ product_name }}"
+        allow_user_chats: true
+        allow_bot_chats: false
+        allow_group_chats: true
+        allow_channel_chats: false
+```
+
+#### Copy Text Button
+```yaml
+buttons:
+  - - text: "📋 Copy Code"
+      copy_text:
+        text: "PROMO-{{ code }}"
+```
+
+#### Pay & Game Buttons
+```yaml
+buttons:
+  - - text: "💳 Pay $10.00"
+      pay: true
+  - - text: "🎮 Play Game"
+      callback_game: true
+```
+
+## Message Templates
+
+Define reusable Jinja2 templates for consistent messaging:
+
+```yaml
+templates:
+  order_notification: |
+    🛒 *New Order #{{ order_id }}*
+    
+    👤 Customer: {{ customer_name }}
+    💰 Total: ${{ total }}
+    📦 Items: {{ items_count }}
+    
+    {% if notes %}📝 Notes: {{ notes }}{% endif %}
+
+endpoints:
+  - path: "/orders"
+    chat_id: "123456789"
+    template: "order_notification"
+    parse_mode: "MarkdownV2"
+```
+
+Send with:
+```bash
+curl -X POST http://localhost:8000/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "12345",
+    "customer_name": "John Doe",
+    "total": "99.99",
+    "items_count": 3,
+    "notes": "Urgent delivery"
+  }'
+```
+
+## Field Mapping
+
+Map nested JSON fields to FastBotty's expected fields:
+
+```yaml
+endpoints:
+  - path: "/webhook/shopify"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      image_url: "product.featured_image"
+      image_urls: "product.images"
+      chat_id: "meta.notify_target"
+```
+
+## Deployment Options
+
+### Local Development
+
+```bash
+# Start with auto-reload
+fastbotty run --reload
+
+# Or specify host/port
+fastbotty run --host 0.0.0.0 --port 8000
+```
+
+### Docker
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["fastbotty", "run"]
+```
+
+```bash
+docker build -t my-notifier .
+docker run -p 8000:8000 \
+  -e TELEGRAM_BOT_TOKEN="your-token" \
+  -e API_KEY="your-secret-key" \
+  -v $(pwd)/config.yaml:/app/config.yaml \
+  my-notifier
+```
+
+### Docker Compose
+
+```yaml
+version: "3.8"
+services:
+  fastbotty:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - API_KEY=${API_KEY}
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./plugins:/app/plugins
+    restart: unless-stopped
+```
+
+### Cloud Platforms
+
+#### Render.com
+```bash
+# Set environment variables in Render dashboard
+# Start command: fastbotty run --host 0.0.0.0 --port $PORT
+```
+
+#### Railway.app
+```bash
+# Set environment variables
+# Deploy automatically from GitHub
+```
+
+#### Fly.io
+```bash
+fly launch
+fly secrets set TELEGRAM_BOT_TOKEN=your-token
+fly secrets set API_KEY=your-secret-key
+fly deploy
+```
+
+## Webhook Setup
+
+```bash
+# Register webhook with Telegram
+fastbotty webhook setup
+
+# Check webhook status
+fastbotty webhook info
+
+# Remove webhook
+fastbotty webhook delete
+```
+
+## API Usage
+
+### Sending Notifications
+
+```bash
+# Simple text message
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your-secret-key" \
+  -d '{"message": "Hello World!"}'
+
+# With image
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "New product",
+    "image_url": "https://example.com/product.jpg"
+  }'
+
+# Multiple images (gallery)
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Product gallery",
+    "image_urls": [
+      "https://example.com/1.jpg",
+      "https://example.com/2.jpg",
+      "https://example.com/3.jpg"
+    ]
+  }'
+
+# Override chat_id per request
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Hello",
+    "chat_id": "987654321"
+  }'
+
+# Broadcast to multiple chats
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Broadcast",
+    "chat_ids": ["123", "456", "789"]
+  }'
+```
+
+### Response Format
+
+**Success:**
+```json
+{
+  "status": "sent",
+  "results": [
+    {"chat_id": "123", "message_id": 456}
+  ]
+}
+```
+
+**Error:**
+```json
+{
+  "detail": {
+    "error": "error_code",
+    "message": "Error description"
+  }
+}
+```
+
+## Practical Examples
+
+### E-commerce Order Notification
+
+```yaml
+endpoints:
+  - path: "/orders"
+    chat_id: "-1001234567890"  # Channel ID
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    labels:
+      order_id: "🆔 Order"
+      customer: "👤 Customer"
+      total: "💰 Total"
+      status: "📦 Status"
+    buttons:
+      - - text: "📦 Track Order #{{ order_id }}"
+          url: "https://shop.com/track/{{ order_id }}"
+      - - text: "📋 Copy Order ID"
+          copy_text:
+            text: "{{ order_id }}"
+```
+
+### CI/CD Pipeline Alerts
+
+```yaml
+endpoints:
+  - path: "/ci/alerts"
+    chat_id: "-1001234567890"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    labels:
+      status: "📊 Status"
+      branch: "🌿 Branch"
+      commit: "📝 Commit"
+      author: "👤 Author"
+    buttons:
+      - - text: "🔗 View Build"
+          url: "https://ci.example.com/builds/{{ build_id }}"
+```
+
+### Server Monitoring
+
+```yaml
+endpoints:
+  - path: "/monitor/alerts"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "✅ Acknowledge"
+          callback_data: "ack_{{ alert_id }}"
+      - - text: "🚀 Open Dashboard"
+          web_app:
+            url: "https://monitor.example.com/alerts/{{ alert_id }}"
+```
+
+### Multi-Channel Broadcast
+
+```yaml
+endpoints:
+  - path: "/broadcast"
+    chat_ids:
+      - "123456789"              # User ID
+      - "-1001234567890"         # Group ID
+      - "@my_channel"            # Channel username
+    formatter: "plain"
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Bot not sending messages:**
+- Verify bot token is correct
+- Ensure bot is added to the chat/group
+- For channels, bot must be admin
+- Check `fastbotty validate` output
+
+**Invalid chat_id:**
+- User ID: positive number (`123456789`)
+- Group ID: negative number (`-123456789`)
+- Supergroup/Channel: starts with `-100` (`-1001234567890`)
+- Channel username: `@channel_name`
+
+**Markdown parsing errors:**
+- Use `parse_mode: "MarkdownV2"`
+- Special characters are auto-escaped by FastBotty
+
+### Validation
+
+```bash
+# Validate your config.yaml
+fastbotty validate
+```
+
+## Health Check
+
+```bash
+curl http://localhost:8000/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "endpoints": 2,
+  "formatters": ["plain", "markdown", "custom_formatter"]
+}
+```
+
+## Chat ID Formats
+
+- **User ID**: `123456789` (positive number)
+- **Group ID**: `-123456789` (negative number)
+- **Supergroup/Channel**: `-1001234567890` (starts with -100)
+- **Channel Username**: `@my_channel` (with @ prefix)
+
+## Best Practices
+
+1. **Use environment variables** for sensitive data (tokens, API keys)
+2. **Enable API authentication** for production deployments
+3. **Use templates** for consistent message formatting
+4. **Leverage field mapping** for complex JSON payloads
+5. **Test locally** before deploying to production
+6. **Use webhooks** for button click handling
+7. **Monitor health endpoint** for deployment status
+
+## Resources
+
+- **GitHub**: [github.com/venopyX/fastbotty](https://github.com/venopyX/fastbotty)
+- **PyPI**: [pypi.org/project/fastbotty/](https://pypi.org/project/fastbotty/)
+- **Documentation**: [USAGE.md](https://github.com/venopyX/fastbotty/blob/main/USAGE.md)
