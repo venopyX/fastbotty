@@ -25,8 +25,10 @@ Ideal for:
 - **🔌 Plugin System**: Custom formatters without touching core code.
 - **📱 All Chat Types**: Private chats, groups, supergroups, and channels.
 - **📢 Broadcast**: Send to multiple chats simultaneously.
-- **🖼️ Rich Media**: Single images, photo galleries (up to 10).
+- **🖼️ Rich Media**: Single images, photo galleries (up to 10), documents, videos, audio, and voice messages.
+- **📍 Location Sharing**: Send GPS coordinates with optional live tracking.
 - **🎹 Inline Keyboards**: Interactive buttons with dynamic templates.
+- **⌨️ Reply Keyboards**: Custom keyboards with buttons for contacts, locations, and more.
 - **🤖 Command Handlers**: Respond to `/start`, `/help`, etc.
 - **🌐 Environment Variables**: Universal `${VAR}` support in all config fields.
 - **🏷️ Custom Labels**: Map `order_id` → `🆔 Order ID`.

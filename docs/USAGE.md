@@ -914,3 +914,449 @@ def send_alert(metric, value, threshold):
 # Usage
 send_alert("CPU Usage", 95, 80)
 ```
+
+---
+
+## Reply Keyboards
+
+Reply keyboards replace the user's standard keyboard with custom buttons. Perfect for creating bot menus and collecting user input.
+
+### Basic Reply Keyboard
+
+```yaml
+endpoints:
+  - path: "/survey"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - ["👍 Good", "👎 Bad"]
+        - ["📝 Feedback"]
+      resize_keyboard: true
+      one_time_keyboard: true
+      input_field_placeholder: "How was your experience?"
+```
+
+**Sending:**
+
+```bash
+curl -X POST http://localhost:8000/survey \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Please rate our service"}'
+```
+
+### Request Contact or Location
+
+Use special keyboard buttons to request user information:
+
+```yaml
+endpoints:
+  - path: "/register"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - - text: "📞 Share Contact"
+            request_contact: true
+        - - text: "📍 Share Location"
+            request_location: true
+      resize_keyboard: true
+```
+
+### Web App Button in Reply Keyboard
+
+```yaml
+endpoints:
+  - path: "/open-app"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - - text: "🚀 Open Dashboard"
+            web_app:
+              url: "https://app.example.com"
+      resize_keyboard: true
+```
+
+### Dynamic Reply Keyboard with Templates
+
+```yaml
+endpoints:
+  - path: "/order-actions"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - ["Confirm Order #{{ order_id }}", "Cancel Order #{{ order_id }}"]
+        - ["View Details"]
+      resize_keyboard: true
+      one_time_keyboard: true
+```
+
+**Sending:**
+
+```bash
+curl -X POST http://localhost:8000/order-actions \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Order ready", "order_id": "12345"}'
+```
+
+### Removing Reply Keyboard
+
+```yaml
+endpoints:
+  - path: "/complete"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard_remove:
+      remove_keyboard: true
+```
+
+### Force Reply
+
+Force users to reply to a message:
+
+```yaml
+endpoints:
+  - path: "/ask-question"
+    chat_id: "123456789"
+    formatter: "plain"
+    force_reply:
+      force_reply: true
+      input_field_placeholder: "Type your answer..."
+```
+
+---
+
+## Sending Documents
+
+Send PDF files, documents, and other file types:
+
+### Basic Document
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Monthly report attached",
+    "document_url": "https://example.com/report.pdf",
+    "filename": "report_december_2024.pdf"
+  }'
+```
+
+### Document with Custom Filename
+
+```yaml
+# config.yaml
+endpoints:
+  - path: "/send-report"
+    chat_id: "123456789"
+    formatter: "plain"
+    parse_mode: "MarkdownV2"
+```
+
+**Sending:**
+
+```bash
+curl -X POST http://localhost:8000/send-report \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "*Monthly Report*\n\nGenerated on 2024-12-28",
+    "document_url": "https://api.example.com/files/report.pdf",
+    "filename": "Monthly_Report_Dec_2024.pdf"
+  }'
+```
+
+### Field Mapping for Documents
+
+```yaml
+endpoints:
+  - path: "/webhook/documents"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      document_url: "attachments.0.url"
+      filename: "attachments.0.name"
+```
+
+---
+
+## Sending Videos
+
+Send videos with optional thumbnails and metadata:
+
+### Basic Video
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Product demo video",
+    "video_url": "https://example.com/demo.mp4",
+    "thumbnail_url": "https://example.com/thumb.jpg"
+  }'
+```
+
+### Video with Full Metadata
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Tutorial: Getting Started",
+    "video_url": "https://example.com/tutorial.mp4",
+    "thumbnail_url": "https://example.com/thumb.jpg",
+    "width": 1920,
+    "height": 1080,
+    "duration": 300,
+    "supports_streaming": true
+  }'
+```
+
+### Configuration with Field Mapping
+
+```yaml
+endpoints:
+  - path: "/webhook/videos"
+    chat_id: "123456789"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    field_map:
+      video_url: "media.video.url"
+      thumbnail_url: "media.video.thumbnail"
+      duration: "media.video.length"
+```
+
+---
+
+## Sending Audio
+
+Send audio files (music) with metadata:
+
+### Audio with Full Details
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "New episode released!",
+    "audio_url": "https://example.com/podcast-ep42.mp3",
+    "title": "Episode 42: FastBotty Framework",
+    "performer": "TechTalk Podcast",
+    "duration": 3600,
+    "thumbnail_url": "https://example.com/podcast-cover.jpg"
+  }'
+```
+
+### Audio Configuration
+
+```yaml
+endpoints:
+  - path: "/webhook/podcasts"
+    chat_id: "-1001234567890"
+    formatter: "plain"
+    field_map:
+      audio_url: "episode.audio_url"
+      title: "episode.title"
+      performer: "podcast.name"
+      duration: "episode.duration_seconds"
+      thumbnail_url: "podcast.cover_image"
+```
+
+---
+
+## Sending Voice Messages
+
+Send voice messages (like voice notes):
+
+### Basic Voice Message
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Voice message from customer support",
+    "voice_url": "https://example.com/voice-note.ogg",
+    "duration": 45
+  }'
+```
+
+### Voice with Field Mapping
+
+```yaml
+endpoints:
+  - path: "/webhook/voice-notes"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      voice_url: "recording.url"
+      duration: "recording.length"
+```
+
+---
+
+## Location Sharing
+
+Send GPS coordinates with optional live location tracking:
+
+### Basic Location
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Order delivery location",
+    "location": {
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    }
+  }'
+```
+
+### Live Location with Options
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Driver location (live tracking)",
+    "location": {
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "horizontal_accuracy": 50.0,
+      "live_period": 3600,
+      "heading": 90,
+      "proximity_alert_radius": 100
+    }
+  }'
+```
+
+**Parameters:**
+- `horizontal_accuracy`: Location accuracy in meters (0-1500)
+- `live_period`: Time in seconds for live location updates (60-86400)
+- `heading`: Direction of movement (1-360 degrees)
+- `proximity_alert_radius`: Alert radius in meters (1-100000)
+
+### Location with Field Mapping
+
+```yaml
+endpoints:
+  - path: "/webhook/deliveries"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      location: "delivery.coordinates"
+```
+
+**Incoming payload:**
+
+```json
+{
+  "order_id": "12345",
+  "delivery": {
+    "coordinates": {
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    },
+    "status": "in_transit"
+  }
+}
+```
+
+### Location with Inline Buttons
+
+```yaml
+endpoints:
+  - path: "/share-location"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "🗺️ Open in Google Maps"
+          url: "https://maps.google.com/?q={{ location.latitude }},{{ location.longitude }}"
+      - - text: "📍 Get Directions"
+          url: "https://www.google.com/maps/dir/?api=1&destination={{ location.latitude }},{{ location.longitude }}"
+```
+
+---
+
+## Combined Examples
+
+### Complete Media Notification System
+
+```yaml
+# config.yaml
+endpoints:
+  # Documents
+  - path: "/notify/documents"
+    chat_id: "123456789"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    field_map:
+      document_url: "file.url"
+      filename: "file.name"
+
+  # Videos
+  - path: "/notify/videos"
+    chat_id: "123456789"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    field_map:
+      video_url: "media.url"
+      thumbnail_url: "media.thumbnail"
+
+  # Audio
+  - path: "/notify/audio"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      audio_url: "track.url"
+      title: "track.name"
+      performer: "track.artist"
+
+  # Location
+  - path: "/notify/location"
+    chat_id: "123456789"
+    formatter: "plain"
+    buttons:
+      - - text: "🗺️ View on Map"
+          url: "https://maps.google.com/?q={{ location.latitude }},{{ location.longitude }}"
+```
+
+### Delivery Notification with Location and Reply Keyboard
+
+```yaml
+endpoints:
+  - path: "/delivery/update"
+    chat_id: "123456789"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    field_map:
+      location: "driver.current_location"
+    reply_keyboard:
+      keyboard:
+        - ["📍 Track Driver", "📞 Call Driver"]
+        - ["✅ Confirm Delivery", "❌ Report Issue"]
+      resize_keyboard: true
+      one_time_keyboard: true
+```
+
+**Usage:**
+
+```bash
+curl -X POST http://localhost:8000/delivery/update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "*Delivery Update*\n\nYour order is on the way!",
+    "order_id": "12345",
+    "driver": {
+      "name": "John Doe",
+      "phone": "+1234567890",
+      "current_location": {
+        "latitude": 40.7128,
+        "longitude": -74.0060,
+        "live_period": 1800,
+        "heading": 45
+      }
+    }
+  }'
+```

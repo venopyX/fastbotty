@@ -334,6 +334,190 @@ curl -X POST http://localhost:8000/notify \
   }'
 ```
 
+## Reply Keyboards
+
+FastBotty supports Telegram reply keyboards to replace the user's standard keyboard with custom buttons.
+
+### Basic Reply Keyboard
+
+```yaml
+endpoints:
+  - path: "/survey"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - ["👍 Good", "👎 Bad"]
+        - ["📝 Feedback"]
+      resize_keyboard: true
+      one_time_keyboard: true
+      input_field_placeholder: "Choose an option..."
+```
+
+### Special Request Buttons
+
+Request contact or location from users:
+
+```yaml
+endpoints:
+  - path: "/register"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - - text: "📞 Share Contact"
+            request_contact: true
+        - - text: "📍 Share Location"
+            request_location: true
+      resize_keyboard: true
+```
+
+### Reply Keyboard with Template
+
+```yaml
+endpoints:
+  - path: "/order-menu"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard:
+      keyboard:
+        - ["Confirm Order #{{ order_id }}", "Cancel Order #{{ order_id }}"]
+      one_time_keyboard: true
+```
+
+### Force Reply
+
+Force users to reply to a message:
+
+```yaml
+endpoints:
+  - path: "/ask"
+    chat_id: "123456789"
+    formatter: "plain"
+    force_reply:
+      force_reply: true
+      input_field_placeholder: "Type your answer..."
+```
+
+### Remove Reply Keyboard
+
+```yaml
+endpoints:
+  - path: "/done"
+    chat_id: "123456789"
+    formatter: "plain"
+    reply_keyboard_remove:
+      remove_keyboard: true
+```
+
+## Media Types
+
+### Documents
+
+Send PDF files, documents, and other file types:
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Monthly report",
+    "document_url": "https://example.com/report.pdf",
+    "filename": "report_dec_2024.pdf"
+  }'
+```
+
+Configuration with field mapping:
+
+```yaml
+endpoints:
+  - path: "/send-docs"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      document_url: "file.url"
+      filename: "file.name"
+```
+
+### Videos
+
+Send videos with optional thumbnails:
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Product demo",
+    "video_url": "https://example.com/demo.mp4",
+    "thumbnail_url": "https://example.com/thumb.jpg",
+    "width": 1920,
+    "height": 1080,
+    "duration": 120,
+    "supports_streaming": true
+  }'
+```
+
+### Audio
+
+Send audio files (music) with metadata:
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "New podcast episode",
+    "audio_url": "https://example.com/episode.mp3",
+    "title": "Episode 42",
+    "performer": "TechTalk",
+    "duration": 3600
+  }'
+```
+
+### Voice Messages
+
+Send voice notes:
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Voice message",
+    "voice_url": "https://example.com/voice.ogg",
+    "duration": 30
+  }'
+```
+
+### Location Sharing
+
+Send GPS coordinates with optional live tracking:
+
+```bash
+curl -X POST http://localhost:8000/notify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Delivery location",
+    "location": {
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "live_period": 3600,
+      "horizontal_accuracy": 50.0
+    }
+  }'
+```
+
+Configuration example:
+
+```yaml
+endpoints:
+  - path: "/share-location"
+    chat_id: "123456789"
+    formatter: "plain"
+    field_map:
+      location: "delivery.gps_coordinates"
+    buttons:
+      - - text: "🗺️ Open in Google Maps"
+          url: "https://maps.google.com/?q={{ location.latitude }},{{ location.longitude }}"
+```
+
 ### Response Format
 
 **Success:**

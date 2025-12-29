@@ -2,27 +2,119 @@
 
 Ideas and planned features for future versions.
 
-## Reply Markup
+## ✅ Reply Markup (IMPLEMENTED)
 Support for reply keyboards and remove keyboard.
 
+**Implemented in v1.x.x:**
+- Reply keyboard markup with text buttons
+- Special request buttons (contact, location, poll, web_app)
+- Keyboard customization (resize, one_time, persistent)
+- Input field placeholder support
+- Force reply functionality
+- Reply keyboard removal
+- Template support for all reply markup types
+
+Example usage:
 ```yaml
 endpoints:
   - path: "/survey"
     reply_keyboard:
-      - ["👍 Good", "👎 Bad"]
-      - ["📝 Feedback"]
-    one_time_keyboard: true
-    resize_keyboard: true
+      keyboard:
+        - ["👍 Good", "👎 Bad"]
+        - ["📝 Feedback"]
+      one_time_keyboard: true
+      resize_keyboard: true
 ```
 
-## Force Reply
+## Force Reply (IMPLEMENTED via Reply Markup)
 Force users to reply to messages.
 
-```yaml
-endpoints:
-  - path: "/ask"
-    force_reply: true
-    input_placeholder: "Type your answer..."
+## ✅ Document Support (IMPLEMENTED)
+Send files and documents.
+
+**Implemented in v1.x.x:**
+- Document sending with caption support
+- Custom filename specification
+- Field mapping for document URLs
+- Reply markup support (inline and reply keyboards)
+- Parse mode support for captions
+
+Example usage:
+```json
+{
+  "message": "Monthly report",
+  "document_url": "https://example.com/report.pdf",
+  "filename": "report_dec_2024.pdf"
+}
+```
+
+## ✅ Video Support (IMPLEMENTED)
+Send videos with thumbnails.
+
+**Implemented in v1.x.x:**
+- Video sending with caption
+- Thumbnail support
+- Metadata support (width, height, duration)
+- Streaming support flag
+- Field mapping for video URLs
+- Reply markup support
+
+Example usage:
+```json
+{
+  "caption": "Product demo",
+  "video_url": "https://example.com/demo.mp4",
+  "thumbnail_url": "https://example.com/thumb.jpg"
+}
+```
+
+## ✅ Audio/Voice Messages (IMPLEMENTED)
+
+**Implemented in v1.x.x:**
+- Audio file sending with metadata (title, performer, duration)
+- Voice message sending
+- Thumbnail support for audio
+- Caption support for both audio and voice
+- Field mapping support
+
+Audio example:
+```json
+{
+  "audio_url": "https://example.com/podcast.mp3",
+  "title": "Episode 42",
+  "performer": "TechTalk"
+}
+```
+
+Voice example:
+```json
+{
+  "voice_url": "https://example.com/voice.ogg",
+  "duration": 30
+}
+```
+
+## ✅ Location Sharing (IMPLEMENTED)
+
+**Implemented in v1.x.x:**
+- GPS coordinate sending (latitude, longitude)
+- Live location tracking with duration
+- Horizontal accuracy specification
+- Heading/direction support
+- Proximity alert radius
+- Reply markup support
+
+Example usage:
+```json
+{
+  "message": "Order delivery location",
+  "location": {
+    "latitude": 40.7128,
+    "longitude": -74.0060,
+    "live_period": 3600,
+    "horizontal_accuracy": 50.0
+  }
+}
 ```
 
 ## Message Editing
@@ -32,50 +124,6 @@ Edit previously sent messages.
 endpoints:
   - path: "/update"
     method: "edit"
-```
-
-## Document Support
-Send files and documents.
-
-```json
-{
-  "message": "Monthly report",
-  "document_url": "https://example.com/report.pdf",
-  "filename": "report_dec_2024.pdf"
-}
-```
-
-## Video Support
-Send videos with thumbnails.
-
-```json
-{
-  "caption": "Product demo",
-  "video_url": "https://example.com/demo.mp4",
-  "thumbnail_url": "https://example.com/thumb.jpg"
-}
-```
-
-## Audio/Voice Messages
-
-```json
-{
-  "audio_url": "https://example.com/podcast.mp3",
-  "title": "Episode 42",
-  "performer": "TechTalk"
-}
-```
-
-## Location Sharing
-
-```json
-{
-  "message": "Order delivery location",
-  "location": {
-    "latitude": 40.7128,
-    "longitude": -74.0060
-  }
-}
 ```
 
 ## Message Queue Integration

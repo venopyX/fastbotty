@@ -3,16 +3,60 @@
 bot:
   token: "${TELEGRAM_BOT_TOKEN}"
   test_mode: false
+  # webhook_url: "${WEBHOOK_URL}"  # Uncomment for webhook support
+  # webhook_path: "/bot/webhook"
+
+# Message templates with Jinja2 support
+templates:
+  order_notification: |
+    🛒 *New Order \#{{ order_id }}*
+    
+    👤 Customer: {{ customer }}
+    💰 Total: {{ total }}
 
 endpoints:
-  - path: "/notify/orders"
-    chat_id: "-1001234567890"
-    formatter: "plain"
-
+  # Basic text notification
   - path: "/notify/alerts"
     chat_id: "123456789"
     formatter: "markdown"
-    parse_mode: "Markdown"
+    parse_mode: "MarkdownV2"
+
+  # Notification with inline buttons
+  - path: "/notify/orders"
+    chat_id: "-1001234567890"
+    formatter: "plain"
+    buttons:
+      - - text: "View Order"
+          url: "https://example.com/orders/{{ order_id }}"
+
+  # Reply keyboard for user input
+  # - path: "/survey"
+  #   chat_id: "123456789"
+  #   formatter: "plain"
+  #   reply_keyboard:
+  #     keyboard:
+  #       - ["👍 Good", "👎 Bad"]
+  #       - ["📝 Feedback"]
+  #     resize_keyboard: true
+  #     one_time_keyboard: true
+
+  # Document notification
+  # - path: "/send-document"
+  #   chat_id: "123456789"
+  #   formatter: "plain"
+  #   # Use field_map to map document_url from payload
+
+  # Video notification
+  # - path: "/send-video"
+  #   chat_id: "123456789"
+  #   formatter: "plain"
+  #   # Payload should include video_url and optional thumbnail_url
+
+  # Location sharing
+  # - path: "/share-location"
+  #   chat_id: "123456789"
+  #   formatter: "plain"
+  #   # Payload should include location with latitude and longitude
 
 server:
   host: "0.0.0.0"
@@ -21,3 +65,17 @@ server:
 
 logging:
   level: "INFO"
+
+# Callback handlers for inline buttons
+# callbacks:
+#   - data: "approve"
+#     response: "✅ Approved!"
+#   - data: "reject"
+#     response: "❌ Rejected!"
+
+# Bot command handlers
+# commands:
+#   - command: "/start"
+#     response: "👋 Welcome to FastBotty!"
+#   - command: "/help"
+#     response: "📖 Need help? Visit our documentation."
