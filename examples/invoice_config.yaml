@@ -1,0 +1,152 @@
+# FastBotty Invoice Example Configuration
+# This example demonstrates how to configure invoices with pay buttons
+
+bot:
+  token: "${TELEGRAM_BOT_TOKEN}"
+  test_mode: false
+  webhook_url: "${WEBHOOK_URL}"
+  webhook_path: "/bot/webhook"
+
+templates:
+  invoice_message: |
+    💳 *Invoice Created*
+    
+    Product: {{ product_name }}
+    Price: {{ price }}
+    
+    Click the button below to pay with Telegram Stars\.
+
+endpoints:
+  # Example 1: Simple Telegram Stars payment
+  - path: "/payment/stars"
+    chat_id: "${CHAT_ID}"
+    template: "invoice_message"
+    parse_mode: "MarkdownV2"
+    buttons:
+      - - text: "Pay 10 XTR"  # XTR will be replaced with ⭐
+          pay: true
+    invoice:
+      title: "Premium Feature"
+      description: "Unlock premium features for 30 days"
+      payload: "premium_{{ user_id }}_{{ timestamp }}"
+      currency: "XTR"  # Telegram Stars
+      provider_token: ""  # Empty string for Telegram Stars
+      prices:
+        - label: "Premium Access"
+          amount: 1000  # 10 Telegram Stars
+
+  # Example 2: USD payment with multiple items
+  - path: "/payment/order"
+    chat_id: "${CHAT_ID}"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    buttons:
+      - - text: "💳 Pay $25.00"
+          pay: true
+      - - text: "🔗 View Order Details"
+          url: "https://example.com/orders/{{ order_id }}"
+    invoice:
+      title: "Order #{{ order_id }}"
+      description: "{{ product_name }} - {{ product_description }}"
+      payload: "order_{{ order_id }}_{{ user_id }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"
+      prices:
+        - label: "Product"
+          amount: 2000  # $20.00 in cents
+        - label: "Shipping"
+          amount: 500   # $5.00 in cents
+        - label: "Discount"
+          amount: -200  # -$2.00 discount
+      photo_url: "{{ product_image_url }}"
+      photo_width: 800
+      photo_height: 600
+
+  # Example 3: Donation with tips
+  - path: "/payment/donation"
+    chat_id: "${CHAT_ID}"
+    formatter: "plain"
+    buttons:
+      - - text: "💰 Donate ⭐️"  # ⭐️ will be replaced with ⭐
+          pay: true
+    invoice:
+      title: "Support Our Project"
+      description: "Help us continue our work and make a difference"
+      payload: "donation_{{ donation_id }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"
+      prices:
+        - label: "Donation"
+          amount: 1000  # $10.00
+      max_tip_amount: 10000  # Maximum tip: $100.00
+      suggested_tip_amounts: [500, 1000, 2000, 5000]  # $5, $10, $20, $50
+      photo_url: "https://example.com/donation-banner.jpg"
+      need_email: true
+      need_name: true
+
+  # Example 4: Physical product with shipping
+  - path: "/payment/physical"
+    chat_id: "${CHAT_ID}"
+    formatter: "markdown"
+    parse_mode: "MarkdownV2"
+    buttons:
+      - - text: "Pay 50 XTR"
+          pay: true
+    invoice:
+      title: "{{ product_name }}"
+      description: "{{ product_description }}"
+      payload: "physical_{{ product_id }}_{{ order_id }}"
+      currency: "USD"
+      provider_token: "${PAYMENT_PROVIDER_TOKEN}"
+      prices:
+        - label: "Product"
+          amount: 4500  # $45.00
+        - label: "Shipping (Base)"
+          amount: 500   # $5.00
+      need_name: true
+      need_email: true
+      need_phone_number: true
+      need_shipping_address: true
+      is_flexible: true  # Price may vary based on shipping method
+      send_email_to_provider: true
+      send_phone_number_to_provider: true
+
+  # Example 5: Subscription with multiple pricing tiers (via template)
+  - path: "/payment/subscription"
+    chat_id: "${CHAT_ID}"
+    formatter: "plain"
+    buttons:
+      - - text: "Subscribe for {{ amount }} XTR"
+          pay: true
+    invoice:
+      title: "{{ plan_name }} Subscription"
+      description: "{{ plan_description }}"
+      payload: "subscription_{{ plan_id }}_{{ user_id }}"
+      currency: "XTR"
+      provider_token: ""
+      prices:
+        - label: "Monthly Fee"
+          amount: "{{ amount }}"  # Dynamic amount from payload
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  api_key: "${API_KEY}"
+  cors_origins: ["*"]
+
+logging:
+  level: "INFO"
+
+callbacks:
+  - data: "view_invoice"
+    response: "Opening invoice details..."
+
+commands:
+  - command: "/start"
+    response: |
+      👋 Welcome to FastBotty Payment Bot!
+      
+      Send payment requests via webhook to process invoices.
+    buttons:
+      - - text: "📖 Documentation"
+          url: "https://github.com/venopyx/fastbotty"
