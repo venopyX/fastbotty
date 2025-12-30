@@ -1,26 +1,24 @@
-v1.0.4 – Payment & Invoice Support
+### v0.0.4 – Invoice Templates, Message Separation, and .env Support
 
 **Added**
 
-* Complete invoice and payment support compliant with Telegram Bot API.
-* InvoiceConfig and LabeledPrice models with full template support.
-* send_invoice integration for Telegram Stars and traditional currencies.
-* Automatic pay button text replacement for ⭐️ and XTR.
-* Comprehensive invoice examples and documentation.
+* Support for sending template messages and invoices as two separate Telegram messages.
+* Jinja2 template support for all invoice amount fields, including prices and tips.
+* Automatic `.env` file loading for all CLI commands.
+* New invoice examples covering template-based and invoice-only flows.
 
 **Fixed**
 
-* Enforced pay and callback_game buttons to be first in the first row.
-* Clear validation errors for invalid button placement.
-* Correct handling of provider tokens for Telegram Stars.
+* Issue where configuring both template and invoice sent only the invoice.
+* Crashes caused by using template strings in invoice amount fields.
+* CLI commands failing when environment variables were only defined in `.env`.
 
 **Changed**
 
-* Extended EndpointConfig to support invoices.
-* Updated routing to handle invoice sending and validation.
-* Expanded test coverage for payments, validation, and text replacement.
+* Invoice configuration models now accept both `int` and template `str` values.
+* Runtime rendering and type conversion for invoice amounts.
+* Updated documentation to reflect new invoice behavior and `.env` handling.
 
 **Security**
 
-* Provider tokens restricted to environment variables.
-* Strict validation to prevent non-compliant payment configurations.
+* No changes; fully backward compatible with existing configurations.

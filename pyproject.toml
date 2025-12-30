@@ -1,6 +1,6 @@
 [project]
 name = "fastbotty"
-version = "0.0.3"
+version = "0.0.4"
 description = "Lightning-fast, super-simple Python bot framework for building powerful, interactive bots in under a minute using a single, clean YAML configuration file."
 authors = [
     {name = "Gemechis Chala", email = "gladsonchala@gmail.com"}
