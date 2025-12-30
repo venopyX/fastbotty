@@ -4,6 +4,48 @@ This directory contains example configuration files demonstrating various FastBo
 
 ## Examples
 
+### invoice_with_template.yaml
+
+**NEW**: Demonstrates sending both a formatted message AND an invoice together. This is the solution to the common use case where you want to send order details as a message, followed by a payment invoice.
+
+**Features demonstrated:**
+- Sending template message FIRST, then invoice SECOND
+- Dynamic invoice amounts using Jinja2 templates
+- Real e-commerce order notification scenario
+- Multiple inline buttons (pay, copy, URL buttons)
+- Template rendering for all invoice fields
+
+**Usage:**
+
+1. Set environment variables:
+   ```bash
+   export TELEGRAM_BOT_TOKEN="your_bot_token"
+   export CHAT_ID="your_chat_id"
+   ```
+
+2. Run FastBotty:
+   ```bash
+   fastbotty run --config examples/invoice_with_template.yaml
+   ```
+
+3. Test with the provided script:
+   ```bash
+   bash examples/test_invoice.sh
+   ```
+
+**Expected behavior:** TWO messages are sent to Telegram:
+1. **First message**: Formatted order details (from template)
+2. **Second message**: Payment invoice with pay button
+
+### invoice_only.yaml
+
+Demonstrates sending ONLY an invoice without a preceding message.
+
+**Features demonstrated:**
+- Invoice-only endpoint (no template/formatter)
+- Dynamic amounts using Jinja2
+- Quick payment use case
+
 ### invoice_config.yaml
 
 Comprehensive example showing how to configure invoices and payment processing with Telegram.
@@ -68,6 +110,24 @@ Comprehensive example showing how to configure invoices and payment processing w
    ```
 
 ## Important Notes
+
+### Invoice + Template Behavior
+
+When an endpoint has BOTH `template`/`formatter` AND `invoice` configured:
+1. **First**: The formatted message is sent (with order details, etc.)
+2. **Second**: The invoice is sent as a separate message with the pay button
+
+To send ONLY an invoice, omit the `template` and `formatter` fields.
+
+### Jinja2 Template Support in Invoices
+
+All invoice fields support Jinja2 templates:
+- `title`: `"Order #{{ order_id }}"`
+- `description`: `"Payment for {{ items|length }} items"`
+- `payload`: `"order_{{ order_id }}_{{ timestamp }}"`
+- `prices[].amount`: `"{{ total_price|int }}"` or `"{{ (price * 1.1)|int }}"`
+- `max_tip_amount`: `"{{ (total * 0.2)|int }}"`
+- `suggested_tip_amounts`: `["{{ tip1|int }}", "{{ tip2|int }}"]`
 
 ### Pay Button Requirements
 - Pay buttons **must always be the first button in the first row**

@@ -1,0 +1,98 @@
+# Example: Invoice with Template Message
+#
+# This example demonstrates how to send both a formatted template message
+# AND an invoice with dynamic amounts using Jinja2 templates.
+#
+# When an endpoint has both a template/formatter AND an invoice:
+# 1. The formatted message is sent FIRST
+# 2. The invoice is sent SECOND as a separate message
+#
+# This example is based on a real e-commerce order notification scenario.
+
+bot:
+  token: "${TELEGRAM_BOT_TOKEN}"
+  webhook_url: "https://yourapp.onrender.com"
+  webhook_path: "/bot/webhook"
+
+templates:
+  order_notification: |
+    ⚽ <b>NEW ORDER #{{ order_id|default('N/A')|trim }}</b>
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    👤 <b>Customer:</b> <code>{{ customer_name|trim }}</code>
+    📱 <b>Phone:</b> {{ phone|trim }}
+    {% if telegram_username|trim %}
+    📩 <b>Telegram:</b> {{ telegram_username|trim }}
+    {% endif %}
+
+    {% if konami_email and konami_password %}
+    🔐 <b>KONAMI Account</b>
+    └─ <b>Email:</b> <code>{{ konami_email }}</code>
+    └─ <b>Password:</b> <tg-spoiler>{{ konami_password }}</tg-spoiler>
+    {% if account_region|trim %}
+    └─ <b>Region:</b> <code>{{ account_region|upper }}</code>
+    {% endif %}
+    {% endif %}
+
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    🛒 <b>Ordered Items:</b>
+    {% for item in items %}
+    • <b>{{ item.quantity|int }}× {{ item.name|trim }}</b>
+      <i>{{ item.category|capitalize|default('N/A') }}</i>
+      {% if item.coin_amount is defined and item.coin_amount|int > 0 %}
+      • <code>{{ item.coin_amount|int * item.quantity|int }} coins</code>
+      {% endif %}
+      • <code>{{ item.price|int * item.quantity|int }} XTR</code>
+    {% endfor %}
+    ━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    💰 <b>Total:</b> <code>{{ total_price|int }} XTR</code>
+    📅 <b>Placed at:</b> <code>{{ order_date }}</code>
+
+endpoints:
+  # This endpoint sends BOTH the template message AND the invoice
+  - path: "/notify/order"
+    chat_id: "${CHAT_ID}"
+    template: "order_notification"  # This message is sent FIRST
+    parse_mode: "HTML"
+
+    # Buttons appear on the INVOICE message (sent second)
+    buttons:
+      # First row: Pay button (MUST be first button in first row)
+      - - text: "Pay {{ total_price|int }} XTR"  # Dynamic button text
+          pay: true
+
+      # Second row: Copy buttons
+      - - text: "{{ total_price|int }} XTR"
+          copy_text:
+            text: "{{ total_price|int }}"
+
+        - text: "#{{ order_id|default('UNKNOWN') }}"
+          copy_text:
+            text: "{{ order_id|default('UNKNOWN') }}"
+
+      # Third row: URL buttons
+      - - text: "Full Order"
+          url: "https://yourapp.onrender.com/orders/{{ order_id|urlencode }}"
+
+        - text: "{{ customer_name }}"
+          url: "https://yourapp.onrender.com/customers/{{ customer_name|urlencode }}"
+
+    # Invoice configuration with dynamic amounts
+    invoice:
+      title: "Order #{{ order_id|default('UNKNOWN') }}"
+      description: "Payment for {{ items|map(attribute='name')|join(', ') }}"
+      payload: "order_{{ order_id }}_{{ timestamp }}"
+      currency: "XTR"  # Telegram Stars
+      provider_token: ""  # Empty for Telegram Stars
+      
+      # Dynamic amounts using Jinja2 templates!
+      prices:
+        - label: "Order Total"
+          amount: "{{ total_price|int }}"  # Template string for dynamic amount
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  cors_origins: ["*"]
+
+logging:
+  level: "INFO"
