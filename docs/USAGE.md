@@ -80,11 +80,26 @@ server:
   api_key: "${API_KEY}"
 ```
 
-Then set them:
+Then set them using either method:
+
+**Option 1: Export environment variables:**
 ```bash
 export TELEGRAM_BOT_TOKEN="your-token"
 export API_KEY="your-secret-key"
 ```
+
+**Option 2: Create a `.env` file (recommended):**
+```bash
+# Create .env file in your project directory
+cat > .env << EOF
+TELEGRAM_BOT_TOKEN=your-token
+API_KEY=your-secret-key
+CHAT_ID=123456789
+WEBHOOK_URL=https://yourapp.onrender.com
+EOF
+```
+
+**Note:** All CLI commands (`fastbotty run`, `fastbotty validate`, `fastbotty webhook`) automatically load environment variables from a `.env` file in the current directory if it exists.
 
 ### Full Configuration Example
 
@@ -475,6 +490,8 @@ Send payment invoices with the pay button. The pay button **must always be the f
 - **Provider Token**: Use an empty string `""` for Telegram Stars payment
 - **Currency**: Use three-letter ISO 4217 currency codes (USD, EUR, etc.)
 - **Amounts**: Specify prices in smallest currency units (cents for USD, pence for GBP, etc.)
+- **Template Support**: Invoice fields (title, description, payload, amounts, etc.) support Jinja2 templating
+- **Message + Invoice**: When both a template/formatter AND invoice are configured, FastBotty sends the formatted message first, then the invoice as a separate message
 
 ### Basic Invoice Configuration
 
@@ -496,6 +513,66 @@ endpoints:
         - label: "Subscription"
           amount: 1000  # 10.00 in smallest units (e.g., cents)
 ```
+
+### Invoice with Dynamic Amounts (Jinja2 Templates)
+
+All invoice fields support Jinja2 templating, including price amounts:
+
+```yaml
+templates:
+  order_details: |
+    🛒 *Order \#{{ order_id }}*
+    
+    👤 Customer: {{ customer_name }}
+    📦 Items: {{ items|length }}
+    💰 Total: {{ total_price }} XTR
+
+endpoints:
+  - path: "/payment/order"
+    chat_id: "123456789"
+    template: "order_details"  # This message is sent FIRST
+    parse_mode: "MarkdownV2"
+    buttons:
+      - - text: "Pay {{ total_price }} XTR"  # Dynamic button text
+          pay: true
+    invoice:
+      title: "Order #{{ order_id }}"  # Dynamic title
+      description: "Payment for {{ items|map(attribute='name')|join(', ') }}"  # Dynamic description
+      payload: "order_{{ order_id }}_{{ timestamp }}"
+      currency: "XTR"
+      provider_token: ""
+      prices:
+        - label: "Order Total"
+          amount: "{{ total_price|int }}"  # Dynamic amount using template
+        - label: "Service Fee"
+          amount: "{{ (total_price * 0.1)|int }}"  # Calculated amount
+      max_tip_amount: "{{ (total_price * 0.2)|int }}"  # 20% max tip
+      suggested_tip_amounts:
+        - "{{ (total_price * 0.05)|int }}"  # 5% tip
+        - "{{ (total_price * 0.10)|int }}"  # 10% tip
+        - "{{ (total_price * 0.15)|int }}"  # 15% tip
+```
+
+**Sending:**
+
+```bash
+curl -X POST http://localhost:8000/payment/order \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "ABC123",
+    "customer_name": "John Doe",
+    "total_price": 1000,
+    "timestamp": "1735537200",
+    "items": [
+      {"name": "Product A", "price": 600},
+      {"name": "Product B", "price": 400}
+    ]
+  }'
+```
+
+**Result:** Two separate Telegram messages:
+1. First message: The formatted template with order details
+2. Second message: The invoice with the pay button
 
 ### Invoice with Multiple Price Items
 
@@ -602,6 +679,29 @@ invoice:
   prices:
     - label: "Premium Access"
       amount: 100  # 100 Telegram Stars
+```
+
+### Invoice-Only Endpoint (No Message)
+
+If you want to send ONLY an invoice without a preceding message, simply don't configure a `template` or `formatter`, or send an empty message field:
+
+```yaml
+endpoints:
+  - path: "/payment/quick"
+    chat_id: "123456789"
+    # No template or formatter configured
+    buttons:
+      - - text: "Pay 50 XTR"
+          pay: true
+    invoice:
+      title: "Quick Payment"
+      description: "Fast checkout"
+      payload: "quick_{{ transaction_id }}"
+      currency: "XTR"
+      provider_token: ""
+      prices:
+        - label: "Amount"
+          amount: 50
 ```
 
 ---

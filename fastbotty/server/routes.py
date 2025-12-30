@@ -350,6 +350,18 @@ def create_endpoint_handler(
                 # Determine message type and send accordingly
                 # Check for invoice (if pay button is used)
                 if endpoint_config.invoice:
+                    # If there's a template or formatted message, send it first
+                    # Then send the invoice as a separate message
+                    if formatted_message and formatted_message.strip():
+                        # Send the formatted message first (without buttons)
+                        # The invoice will have the buttons with the pay button
+                        await bot.send_message(
+                            chat_id=chat_id,
+                            text=formatted_message,
+                            parse_mode=parse_mode,
+                            reply_markup=None,  # No buttons on the message
+                        )
+
                     # Render invoice fields with Jinja2 templates
                     invoice_title = _render_template(endpoint_config.invoice.title, payload)
                     invoice_description = _render_template(
@@ -368,6 +380,29 @@ def create_endpoint_handler(
                             amount = int(amount_str)
                         prices.append({"label": label, "amount": amount})
 
+                    # Render max_tip_amount if it's a template string
+                    max_tip_amount_config = endpoint_config.invoice.max_tip_amount
+                    max_tip_amount: int | None = None
+                    if max_tip_amount_config is not None:
+                        if isinstance(max_tip_amount_config, str):
+                            max_tip_amount_str = _render_template(max_tip_amount_config, payload)
+                            max_tip_amount = int(max_tip_amount_str)
+                        else:
+                            max_tip_amount = max_tip_amount_config
+
+                    # Render suggested_tip_amounts if any are template strings
+                    suggested_tip_amounts_raw = endpoint_config.invoice.suggested_tip_amounts
+                    suggested_tip_amounts: list[int] | None = None
+                    if suggested_tip_amounts_raw:
+                        rendered_tips: list[int] = []
+                        for tip in suggested_tip_amounts_raw:
+                            if isinstance(tip, str):
+                                tip_str = _render_template(tip, payload)
+                                rendered_tips.append(int(tip_str))
+                            else:
+                                rendered_tips.append(tip)
+                        suggested_tip_amounts = rendered_tips
+
                     # Send invoice
                     result = await bot.send_invoice(
                         chat_id=chat_id,
@@ -377,8 +412,8 @@ def create_endpoint_handler(
                         currency=endpoint_config.invoice.currency,
                         prices=prices,
                         provider_token=endpoint_config.invoice.provider_token or "",
-                        max_tip_amount=endpoint_config.invoice.max_tip_amount,
-                        suggested_tip_amounts=endpoint_config.invoice.suggested_tip_amounts,
+                        max_tip_amount=max_tip_amount,
+                        suggested_tip_amounts=suggested_tip_amounts,
                         start_parameter=endpoint_config.invoice.start_parameter,
                         provider_data=endpoint_config.invoice.provider_data,
                         photo_url=(

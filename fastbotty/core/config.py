@@ -145,7 +145,9 @@ class LabeledPrice(BaseModel, EnvVarMixin):
     """Price portion of the product"""
 
     label: str = Field(..., description="Portion label")
-    amount: int = Field(..., description="Price in smallest currency units (e.g., cents)")
+    amount: int | str = Field(
+        ..., description="Price in smallest currency units (e.g., cents) or Jinja2 template"
+    )
 
 
 class InvoiceConfig(BaseModel, EnvVarMixin):
@@ -160,9 +162,11 @@ class InvoiceConfig(BaseModel, EnvVarMixin):
     )
     currency: str = Field(..., description="Three-letter ISO 4217 currency code (e.g., USD, EUR)")
     prices: list[LabeledPrice] = Field(..., description="Price breakdown (at least one)")
-    max_tip_amount: int | None = Field(default=None, description="Maximum tip in smallest units")
-    suggested_tip_amounts: list[int] | None = Field(
-        default=None, description="Suggested tip amounts in smallest units"
+    max_tip_amount: int | str | None = Field(
+        default=None, description="Maximum tip in smallest units or Jinja2 template"
+    )
+    suggested_tip_amounts: list[int | str] | None = Field(
+        default=None, description="Suggested tip amounts in smallest units or Jinja2 templates"
     )
     start_parameter: str | None = Field(
         default=None, description="Unique deep-linking parameter for /start"

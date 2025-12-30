@@ -205,7 +205,15 @@ def validate(config: str) -> None:
         return
 
     try:
+        from dotenv import load_dotenv
+
         from fastbotty.core.config import AppConfig
+
+        # Load .env from current working directory if it exists
+        env_path = Path.cwd() / ".env"
+        if env_path.exists():
+            load_dotenv(env_path)
+            click.echo(f"✓ Loaded environment variables from {env_path}")
 
         with open(config) as f:
             config_data = yaml.safe_load(f)
@@ -236,8 +244,15 @@ def webhook_setup(config: str, url: str) -> None:
     """Register webhook with Telegram"""
     import asyncio
 
+    from dotenv import load_dotenv
+
     from fastbotty.core.bot import TelegramBot
     from fastbotty.core.config import AppConfig
+
+    # Load .env from current working directory if it exists
+    env_path = Path.cwd() / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
 
     if not Path(config).exists():
         click.echo(f"Error: Config file '{config}' not found", err=True)
@@ -276,8 +291,15 @@ def webhook_info(config: str) -> None:
     """Show current webhook status"""
     import asyncio
 
+    from dotenv import load_dotenv
+
     from fastbotty.core.bot import TelegramBot
     from fastbotty.core.config import AppConfig
+
+    # Load .env from current working directory if it exists
+    env_path = Path.cwd() / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
 
     if not Path(config).exists():
         click.echo(f"Error: Config file '{config}' not found", err=True)
@@ -310,8 +332,15 @@ def webhook_delete(config: str) -> None:
     """Remove webhook"""
     import asyncio
 
+    from dotenv import load_dotenv
+
     from fastbotty.core.bot import TelegramBot
     from fastbotty.core.config import AppConfig
+
+    # Load .env from current working directory if it exists
+    env_path = Path.cwd() / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
 
     if not Path(config).exists():
         click.echo(f"Error: Config file '{config}' not found", err=True)

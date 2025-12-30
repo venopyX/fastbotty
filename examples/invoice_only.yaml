@@ -1,0 +1,34 @@
+# Example: Invoice-Only Endpoint
+#
+# This example demonstrates how to send ONLY an invoice without a preceding
+# formatted message. Simply omit the template/formatter configuration.
+
+bot:
+  token: "${TELEGRAM_BOT_TOKEN}"
+
+endpoints:
+  # Invoice-only endpoint (no template or formatter)
+  - path: "/payment/quick"
+    chat_id: "${CHAT_ID}"
+    # No template or formatter configured = invoice only
+
+    buttons:
+      - - text: "Pay {{ amount }} XTR"
+          pay: true
+
+    invoice:
+      title: "Quick Payment"
+      description: "Fast checkout for {{ product_name }}"
+      payload: "quick_{{ transaction_id }}_{{ timestamp }}"
+      currency: "XTR"
+      provider_token: ""
+      prices:
+        - label: "Product Price"
+          amount: "{{ amount|int }}"  # Dynamic amount
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+logging:
+  level: "INFO"
