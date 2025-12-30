@@ -58,15 +58,23 @@ logging:
 FastBotty supports environment variable substitution with `${VAR_NAME}` syntax:
 
 ```bash
-# Set required variables
+# Option 1: Export variables
 export TELEGRAM_BOT_TOKEN="your-bot-token-from-botfather"
 export API_KEY="your-secret-api-key"
 export WEBHOOK_URL="https://your-app.onrender.com"
 export CHAT_ID="123456789"
 
-# Optional: Set port
-export PORT=8000
+# Option 2: Create .env file (recommended)
+cat > .env << EOF
+TELEGRAM_BOT_TOKEN=your-bot-token-from-botfather
+API_KEY=your-secret-api-key
+WEBHOOK_URL=https://your-app.onrender.com
+CHAT_ID=123456789
+PORT=8000
+EOF
 ```
+
+**Note:** All CLI commands (`run`, `validate`, `webhook`) automatically load `.env` files from the current directory if they exist.
 
 In config.yaml, use variables like:
 ```yaml

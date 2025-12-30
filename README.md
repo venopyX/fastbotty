@@ -163,6 +163,8 @@ WEBHOOK_URL=https://yourapp.onrender.com
 PORT=3000
 ```
 
+**Note:** All CLI commands (`run`, `validate`, `webhook`) automatically load environment variables from a `.env` file in the current directory if it exists. You can use either exported environment variables or a `.env` file.
+
 ---
 
 ## ⚙️ CLI Commands

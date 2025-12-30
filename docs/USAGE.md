@@ -80,11 +80,26 @@ server:
   api_key: "${API_KEY}"
 ```
 
-Then set them:
+Then set them using either method:
+
+**Option 1: Export environment variables:**
 ```bash
 export TELEGRAM_BOT_TOKEN="your-token"
 export API_KEY="your-secret-key"
 ```
+
+**Option 2: Create a `.env` file (recommended):**
+```bash
+# Create .env file in your project directory
+cat > .env << EOF
+TELEGRAM_BOT_TOKEN=your-token
+API_KEY=your-secret-key
+CHAT_ID=123456789
+WEBHOOK_URL=https://yourapp.onrender.com
+EOF
+```
+
+**Note:** All CLI commands (`fastbotty run`, `fastbotty validate`, `fastbotty webhook`) automatically load environment variables from a `.env` file in the current directory if it exists.
 
 ### Full Configuration Example
 
