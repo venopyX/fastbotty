@@ -90,3 +90,57 @@ class TestInvoiceConfig:
         )
         assert len(invoice.prices) == 4
         assert invoice.prices[3].amount == -200  # Discount as negative amount
+
+    def test_invoice_with_template_strings_in_amount(self):
+        """Test invoice configuration with template strings in amount field"""
+        invoice = InvoiceConfig(
+            title="Product Name",
+            description="Product description",
+            payload="product_123",
+            currency="USD",
+            prices=[
+                LabeledPrice(label="Item Price", amount="{{ total_price|int }}"),
+                LabeledPrice(label="Tax", amount="{{ tax_amount|int }}"),
+            ],
+        )
+        assert invoice.prices[0].amount == "{{ total_price|int }}"
+        assert invoice.prices[1].amount == "{{ tax_amount|int }}"
+
+    def test_invoice_with_template_strings_in_max_tip(self):
+        """Test invoice configuration with template strings in max_tip_amount"""
+        invoice = InvoiceConfig(
+            title="Product Name",
+            description="Product description",
+            payload="product_123",
+            currency="USD",
+            prices=[LabeledPrice(label="Price", amount=1000)],
+            max_tip_amount="{{ max_tip|int }}",
+        )
+        assert invoice.max_tip_amount == "{{ max_tip|int }}"
+
+    def test_invoice_with_template_strings_in_suggested_tips(self):
+        """Test invoice configuration with template strings in suggested_tip_amounts"""
+        invoice = InvoiceConfig(
+            title="Product Name",
+            description="Product description",
+            payload="product_123",
+            currency="USD",
+            prices=[LabeledPrice(label="Price", amount=1000)],
+            suggested_tip_amounts=["{{ tip1|int }}", "{{ tip2|int }}", 500],
+        )
+        assert invoice.suggested_tip_amounts == ["{{ tip1|int }}", "{{ tip2|int }}", 500]
+
+    def test_invoice_with_mixed_int_and_string_amounts(self):
+        """Test invoice with both integer and template string amounts"""
+        invoice = InvoiceConfig(
+            title="Mixed Order",
+            description="Order with mixed pricing",
+            payload="order_789",
+            currency="USD",
+            prices=[
+                LabeledPrice(label="Fixed Price", amount=1000),
+                LabeledPrice(label="Dynamic Price", amount="{{ dynamic_price|int }}"),
+            ],
+        )
+        assert invoice.prices[0].amount == 1000
+        assert invoice.prices[1].amount == "{{ dynamic_price|int }}"
