@@ -155,7 +155,16 @@ buttons:
 
 ## Invoices & Payments
 
-Send payment invoices with pay button (must be first in first row):
+Send payment invoices with pay button (must be first in first row).
+
+**Important Notes:**
+- **Template Support**: All invoice fields (title, description, payload, amounts, tips) support Jinja2 templates
+- **Message + Invoice**: When both template/formatter AND invoice are configured, FastBotty sends the formatted message FIRST, then the invoice as a separate message
+- **Pay Button Position**: Must be first button in first row
+- **Star Icons**: `⭐️` and `XTR` in button text are replaced with ⭐
+- **Amounts**: Use smallest currency units (cents for USD, etc.)
+
+### Basic Invoice
 
 ```yaml
 endpoints:
@@ -174,8 +183,46 @@ endpoints:
       prices:
         - label: "Subscription"
           amount: 1000  # 10.00 in smallest units
+```
 
-# With multiple prices and tips
+### Invoice with Dynamic Amounts (Template Support)
+
+```yaml
+templates:
+  order_notification: |
+    🛒 *Order \#{{ order_id }}*
+    👤 Customer: {{ customer_name }}
+    💰 Total: {{ total_price }} XTR
+
+endpoints:
+  - path: "/payment/order"
+    chat_id: "123456789"
+    template: "order_notification"  # Sent FIRST
+    parse_mode: "MarkdownV2"
+    buttons:
+      - - text: "Pay {{ total_price }} XTR"  # Dynamic text
+          pay: true
+    invoice:
+      title: "Order #{{ order_id }}"  # Dynamic title
+      description: "Payment for {{ items|length }} items"
+      payload: "order_{{ order_id }}_{{ timestamp }}"
+      currency: "XTR"
+      provider_token: ""
+      prices:
+        - label: "Order Total"
+          amount: "{{ total_price|int }}"  # Dynamic amount!
+        - label: "Service Fee"
+          amount: "{{ (total_price * 0.1)|int }}"  # Calculated
+      max_tip_amount: "{{ (total_price * 0.2)|int }}"  # Dynamic tip
+      suggested_tip_amounts:
+        - "{{ (total_price * 0.05)|int }}"  # 5%
+        - "{{ (total_price * 0.10)|int }}"  # 10%
+        - "{{ (total_price * 0.15)|int }}"  # 15%
+```
+
+### Invoice with Multiple Prices and Tips
+
+```yaml
 endpoints:
   - path: "/payment/donation"
     chat_id: "123456789"
@@ -203,10 +250,44 @@ endpoints:
 
 **Send invoice:**
 ```bash
-curl -X POST http://localhost:8000/payment/product \
+curl -X POST http://localhost:8000/payment/order \
   -H "Content-Type: application/json" \
-  -d '{"user_id": "123", "order_id": "456"}'
+  -d '{
+    "order_id": "ABC123",
+    "customer_name": "John Doe",
+    "total_price": 1000,
+    "timestamp": "1735537200",
+    "items": [{"name": "Product A"}]
+  }'
 ```
+
+**Result:** Two Telegram messages sent:
+1. First: Formatted message with order details
+2. Second: Invoice with pay button
+
+### Invoice-Only (No Message)
+
+To send ONLY an invoice without a preceding message, omit `template` and `formatter`:
+
+```yaml
+endpoints:
+  - path: "/payment/quick"
+    chat_id: "123456789"
+    # No template or formatter
+    buttons:
+      - - text: "Pay 50 XTR"
+          pay: true
+    invoice:
+      title: "Quick Payment"
+      description: "Fast checkout"
+      payload: "quick_{{ transaction_id }}"
+      currency: "XTR"
+      provider_token: ""
+      prices:
+        - label: "Amount"
+          amount: 50
+```
+
 
 ## Message Templates
 
